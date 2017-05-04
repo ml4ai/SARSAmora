@@ -1,9 +1,9 @@
-package org.clulab.reach.focusedreading.reinforcement_learning.policy_iteration.td
+package org.sarsamora.policy_iteration.td
 
 import com.typesafe.scalalogging.LazyLogging
-import org.clulab.reach.focusedreading.reinforcement_learning.Decays
-import org.clulab.reach.focusedreading.reinforcement_learning.environment._
-import org.clulab.reach.focusedreading.reinforcement_learning.policies._
+import org.sarsamora.Decays
+import org.sarsamora.environment._
+import org.sarsamora.policies._
 
 
 /**

@@ -1,12 +1,12 @@
-package org.clulab.reach.focusedreading.reinforcement_learning.policies
+package org.sarsamora.policies
 
 import java.io.{BufferedWriter, FileWriter}
 
 import breeze.linalg._
 import breeze.stats.distributions.{Multinomial, Uniform}
-import org.clulab.reach.focusedreading.reinforcement_learning.actions.Action
-import org.clulab.reach.focusedreading.reinforcement_learning.states.State
-import org.clulab.reach.focusedreading.reinforcement_learning.randGen
+import org.sarsamora.actions.Action
+import org.sarsamora.states.State
+import org.sarsamora.randGen
 import org.json4s._
 import org.json4s.native.JsonMethods._
 import org.json4s.JsonDSL._

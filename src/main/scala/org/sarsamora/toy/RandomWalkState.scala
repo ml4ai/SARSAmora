@@ -1,6 +1,6 @@
-package org.clulab.reach.focusedreading.reinforcement_learning.toy
+package org.sarsamora.toy
 
-import org.clulab.reach.focusedreading.reinforcement_learning.states.State
+import org.sarsamora.states.State
 
 /**
   * Created by enrique on 31/03/17.

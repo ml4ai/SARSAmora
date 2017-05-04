@@ -1,6 +1,6 @@
-package org.clulab.reach.focusedreading.reinforcement_learning.policies
+package org.sarsamora.policies
 
-import org.clulab.reach.focusedreading.reinforcement_learning.actions.Action
+import org.sarsamora.actions.Action
 
 /**
   * Created by enrique on 31/03/17.

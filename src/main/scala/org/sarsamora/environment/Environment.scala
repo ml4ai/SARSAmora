@@ -1,7 +1,7 @@
-package org.clulab.reach.focusedreading.reinforcement_learning.environment
+package org.sarsamora.environment
 
-import org.clulab.reach.focusedreading.reinforcement_learning.actions.Action
-import org.clulab.reach.focusedreading.reinforcement_learning.states.State
+import org.sarsamora.actions.Action
+import org.sarsamora.states.State
 
 /**
   * Created by enrique on 31/03/17.

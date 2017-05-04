@@ -1,4 +1,4 @@
-package org.clulab.reach.focusedreading.reinforcement_learning.states
+package org.sarsamora.states
 
 /**
   * Created by enrique on 26/03/17.

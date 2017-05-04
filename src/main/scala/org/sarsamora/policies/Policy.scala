@@ -1,7 +1,7 @@
-package org.clulab.reach.focusedreading.reinforcement_learning.policies
+package org.sarsamora.policies
 
-import org.clulab.reach.focusedreading.reinforcement_learning.actions.{Action, DummyAction}
-import org.clulab.reach.focusedreading.reinforcement_learning.states.{DummyState, State}
+import org.sarsamora.actions.{Action, DummyAction}
+import org.sarsamora.states.{DummyState, State}
 import org.json4s.JsonAST.JObject
 import org.json4s._
 import org.json4s.native.JsonMethods._

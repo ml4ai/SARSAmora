@@ -1,4 +1,4 @@
-package org.clulab.reach.focusedreading.reinforcement_learning.actions
+package org.sarsamora.actions
 
 /**
   * Created by enrique on 26/03/17.

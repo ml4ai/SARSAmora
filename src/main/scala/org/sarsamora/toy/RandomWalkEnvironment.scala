@@ -1,8 +1,8 @@
-package org.clulab.reach.focusedreading.reinforcement_learning.toy
+package org.sarsamora.toy
 
-import org.clulab.reach.focusedreading.reinforcement_learning.actions.{Action, ExploitQuery, ExploreQuery}
-import org.clulab.reach.focusedreading.reinforcement_learning.environment.Environment
-import org.clulab.reach.focusedreading.reinforcement_learning.states.State
+//import org.sarsamora.actions.{Action, ExploitQuery, ExploreQuery}
+//import org.sarsamora.environment.Environment
+//import org.sarsamora.states.State
 
 /**
   * Created by enrique on 31/03/17.

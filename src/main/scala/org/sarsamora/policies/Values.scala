@@ -1,12 +1,12 @@
-package org.clulab.reach.focusedreading.reinforcement_learning.policies
+package org.sarsamora.policies
 
 import breeze.linalg.DenseVector
 import breeze.stats.distributions.Uniform
-import org.clulab.reach.focusedreading.reinforcement_learning.randGen
-import org.clulab.reach.focusedreading.reinforcement_learning.actions._
+import org.sarsamora.randGen
+import org.sarsamora.actions._
 
 import collection.mutable
-import org.clulab.reach.focusedreading.reinforcement_learning.states.State
+import org.sarsamora.states.State
 import org.json4s.JsonAST.JObject
 import org.json4s._
 import org.json4s.native.JsonMethods._
@@ -64,11 +64,12 @@ object Values{
           coefficientsExploitEndpoints += (k -> v.extract[Double])
         }
 
-        val coefficientsMap = Map(
-          ExploreQuery().asInstanceOf[Action] -> coefficientsExploreQuery,
-          ExploitQuery().asInstanceOf[Action] -> coefficientsExploitQuery,
-          ExploreEndpoints() -> coefficientsExploreEndpoints,
-          ExploitEndpoints() -> coefficientsExploitEndpoints
+        val coefficientsMap = Map[Action, mutable.HashMap[String, Double]](
+          // TODO: Implement this correctly
+//          ExploreQuery().asInstanceOf[Action] -> coefficientsExploreQuery,
+//          ExploitQuery().asInstanceOf[Action] -> coefficientsExploitQuery,
+//          ExploreEndpoints() -> coefficientsExploreEndpoints,
+//          ExploitEndpoints() -> coefficientsExploitEndpoints
         )
 
         new LinearApproximationValues(coefficientsMap)
@@ -178,12 +179,13 @@ class LinearApproximationValues(val coefficients:Map[Action, mutable.HashMap[Str
 
   override def toJson = {
     val maps = coefficients.map{case (k, v) => (k.toString -> v)}.toSeq
-    ("type" -> "linear") ~
+    ("type" -> "linear") //~
       //("coefficients" -> maps)
-      ("coefficientsExploreQuery" -> coefficients(ExploreQuery()).toMap) ~
-      ("coefficientsExploitQuery" -> coefficients(ExploitQuery()).toMap) ~
-      ("coefficientsExploreEndpoints" -> coefficients(ExploreEndpoints()).toMap) ~
-      ("coefficientsExploitEndpoints" -> coefficients(ExploitEndpoints()).toMap)
+    // TODO: Do this correctly
+//      ("coefficientsExploreQuery" -> coefficients(ExploreQuery()).toMap) ~
+//      ("coefficientsExploitQuery" -> coefficients(ExploitQuery()).toMap) ~
+//      ("coefficientsExploreEndpoints" -> coefficients(ExploreEndpoints()).toMap) ~
+//      ("coefficientsExploitEndpoints" -> coefficients(ExploitEndpoints()).toMap)
   }
 
   private def storeCurrentCoefficients(): Unit ={

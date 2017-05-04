@@ -1,8 +1,8 @@
-package org.clulab.reach.focusedreading.reinforcement_learning.toy
+package org.sarsamora.toy
 
-import org.clulab.reach.focusedreading.reinforcement_learning.environment.Environment
-import org.clulab.reach.focusedreading.reinforcement_learning.policies.{EpGreedyPolicy, LinearApproximationValues, TabularValues}
-import org.clulab.reach.focusedreading.reinforcement_learning.policy_iteration.td.SARSA
+import org.sarsamora.environment.Environment
+import org.sarsamora.policies.{EpGreedyPolicy, LinearApproximationValues, TabularValues}
+import org.sarsamora.policy_iteration.td.SARSA
 import breeze.linalg._
 import breeze.plot._
 
