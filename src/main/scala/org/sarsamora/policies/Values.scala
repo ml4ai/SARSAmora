@@ -30,47 +30,17 @@ abstract class Values(val tolerance:Double = 3e-4){
   def toJson:JObject
 }
 
-object Values{
-  implicit lazy val formats = DefaultFormats
+trait ActionValueLoader{
+  def loadActionValues(ast:JObject):Map[Action, mutable.HashMap[String, Double]]
+}
 
-  def loadValues(ast:JObject):Values = {
+object Values{
+
+  def loadValues(ast:JObject, actionValueLoader: ActionValueLoader):Values = {
     (ast \ "type") match {
       case JString("linear") =>
 
-        val valsExploreQuery = (ast \ "coefficientsExploreQuery").asInstanceOf[JObject].obj
-        val valsExploitQuery = (ast \ "coefficientsExploitQuery").asInstanceOf[JObject].obj
-        val valsExploreEndpoints = (ast \ "coefficientsExploreEndpoints").asInstanceOf[JObject].obj
-        val valsExploitEndpoints = (ast \ "coefficientsExploitEndpoints").asInstanceOf[JObject].obj
-
-
-        // Make a map out of the coefficients
-        val coefficientsExploreQuery = new mutable.HashMap[String, Double]
-        for((k, v) <- valsExploreQuery){
-          coefficientsExploreQuery += (k -> v.extract[Double])
-        }
-
-        val coefficientsExploreEndpoints = new mutable.HashMap[String, Double]
-        for((k, v) <- valsExploreEndpoints){
-          coefficientsExploreEndpoints += (k -> v.extract[Double])
-        }
-
-        val coefficientsExploitQuery = new mutable.HashMap[String, Double]
-        for((k, v) <- valsExploitQuery){
-          coefficientsExploitQuery += (k -> v.extract[Double])
-        }
-
-        val coefficientsExploitEndpoints = new mutable.HashMap[String, Double]
-        for((k, v) <- valsExploitEndpoints){
-          coefficientsExploitEndpoints += (k -> v.extract[Double])
-        }
-
-        val coefficientsMap = Map[Action, mutable.HashMap[String, Double]](
-          // TODO: Implement this correctly
-//          ExploreQuery().asInstanceOf[Action] -> coefficientsExploreQuery,
-//          ExploitQuery().asInstanceOf[Action] -> coefficientsExploitQuery,
-//          ExploreEndpoints() -> coefficientsExploreEndpoints,
-//          ExploitEndpoints() -> coefficientsExploitEndpoints
-        )
+        val coefficientsMap = actionValueLoader.loadActionValues(ast)
 
         new LinearApproximationValues(coefficientsMap)
       case _ =>
@@ -179,8 +149,8 @@ class LinearApproximationValues(val coefficients:Map[Action, mutable.HashMap[Str
 
   override def toJson = {
     val maps = coefficients.map{case (k, v) => (k.toString -> v)}.toSeq
-    ("type" -> "linear") //~
-      //("coefficients" -> maps)
+    ("type" -> "linear") ~
+      ("coefficients" -> maps)
     // TODO: Do this correctly
 //      ("coefficientsExploreQuery" -> coefficients(ExploreQuery()).toMap) ~
 //      ("coefficientsExploitQuery" -> coefficients(ExploitQuery()).toMap) ~

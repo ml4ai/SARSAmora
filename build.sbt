@@ -1,5 +1,6 @@
 
-name := "SARSAmora"
+name := "sarsamora"
+organization := "org.clulab"
 scalaVersion := "2.11.8"
 version := "0.0.0-SNAPSHOT"
 

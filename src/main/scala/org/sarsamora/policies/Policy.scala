@@ -28,11 +28,11 @@ abstract class Policy {
 object Policy {
   implicit lazy val formats = DefaultFormats
 
-  def loadPolicy(ast:JObject):Policy = {
+  def loadPolicy(ast:JObject, actionValueLoader: ActionValueLoader):Policy = {
     (ast \ "type").extract[String] match {
       case "ep_greedy" =>
         val epsilon = (ast \ "epsilon").extract[Double]
-        val values = Values.loadValues((ast \ "values").extract[JObject])
+        val values = Values.loadValues((ast \ "values").extract[JObject], actionValueLoader)
         //val actions = values.asInstanceOf[LinearApproximationValues].coefficients.keySet
         new EpGreedyPolicy(epsilon, values)
       case _ =>
@@ -40,10 +40,10 @@ object Policy {
     }
   }
 
-  def loadPolicy(path:String):Policy = {
+  def loadPolicy(path:String, actionValueLoader: ActionValueLoader):Policy = {
     val text = io.Source.fromFile(path).getLines.mkString("\n")
     val json = parse(text).asInstanceOf[JObject]
-    loadPolicy(json)
+    loadPolicy(json, actionValueLoader)
   }
 }
 
