@@ -148,14 +148,19 @@ class LinearApproximationValues(val coefficients:Map[Action, mutable.HashMap[Str
   }
 
   override def toJson = {
-    val maps = coefficients.map{case (k, v) => (k.toString -> v)}.toSeq
+    val maps = coefficients.map{case (k, v) =>
+
+      val values = v.toMap
+      if(values.size > 0)
+        (k.toString -> Some(values))
+      else
+        (k.toString -> None)
+
+    }
+
+
     ("type" -> "linear") ~
       ("coefficients" -> maps)
-    // TODO: Do this correctly
-//      ("coefficientsExploreQuery" -> coefficients(ExploreQuery()).toMap) ~
-//      ("coefficientsExploitQuery" -> coefficients(ExploitQuery()).toMap) ~
-//      ("coefficientsExploreEndpoints" -> coefficients(ExploreEndpoints()).toMap) ~
-//      ("coefficientsExploitEndpoints" -> coefficients(ExploitEndpoints()).toMap)
   }
 
   private def storeCurrentCoefficients(): Unit ={
