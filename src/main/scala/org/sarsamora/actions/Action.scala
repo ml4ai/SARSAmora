@@ -5,7 +5,6 @@ package org.sarsamora.actions
   */
 
 
-
 abstract class Action
 
 case class DummyAction() extends Action
