@@ -41,23 +41,44 @@ object Values{
       case JString("linear") =>
 
         val coefficientsMap = actionValueLoader.loadActionValues(ast)
-
         new LinearApproximationValues(coefficientsMap)
+
+      case JString("tabular") =>
+        val functionTable = actionValueLoader.loadActionValues(ast)
+        // TODO: Do this cleanly!!
+        val mutableTable = new mutable.HashMap[Action, mutable.HashMap[String, Double]]()
+        mutableTable ++= functionTable
+        new TabularValues(mutableTable)
+
       case _ =>
         throw new NotImplementedError("Not yet implemented")
     }
   }
 }
 
-class TabularValues(default:Double) extends Values {
-  val backEnd = new mutable.HashMap[(State, Action), Double]
+class TabularValues() extends Values {
+  var backEnd = new mutable.HashMap[(String, Action), Double]
+  val uniformDist = Uniform(-1, 1)(randGen)
+
+  def this(loadedBackend:mutable.HashMap[Action, mutable.HashMap[String, Double]]) = {
+    this()
+    this.backEnd = loadedBackend.flatMap{
+      case (a, m) =>
+        m.map{
+          case(s, v) =>
+            (s, a) -> v
+        }
+    }
+  }
 
   override def apply(key:(State, Action)): Double = {
-    if(backEnd.contains(key))
-      backEnd(key)
+    val newKey = (key._1.toString, key._2)
+    if(backEnd.contains(newKey))
+      backEnd(newKey)
     else{
-      backEnd += (key -> default)
-      default
+      val v = 0//uniformDist.sample()
+      backEnd += (newKey -> v)
+      v
     }
   }
 
@@ -65,7 +86,7 @@ class TabularValues(default:Double) extends Values {
     val value:Double = this(current)
     val newValue:Double = value + (rate*(reward + decay*this(next) - value))
 
-    backEnd(current) =  newValue
+    backEnd((current._1.toString(), current._2)) =  newValue
 
     // Return whether the current changed above the requested tolerance
     if(Math.abs(newValue - value) > tolerance)
@@ -75,100 +96,141 @@ class TabularValues(default:Double) extends Values {
   }
 
   override def toJson = {
-    ("coming" -> "soon")
+    val x:Map[String, Option[Map[String, Double]]] = backEnd.groupBy{
+      case (k, v) => k._2
+    }.map{
+      case (action, m) =>
+        // Map[Action, Option[Map[String, Double]]
+        action.toString -> Some(m.map{
+          case ((state, _), v) => state -> v
+        }.toMap)
+    }
+
+//    val maps = backEnd.map { case (k, v) =>
+//
+//      val values = v.toMap
+//      if (values.nonEmpty)
+//        k.toString -> Some(values)
+//      else
+//        k.toString -> None
+//
+//    }
+
+
+    ("type" -> "tabular") ~
+      ("coefficients" -> x)
   }
+
 
 }
 
 
-class LinearApproximationValues(val coefficients:Map[Action, mutable.HashMap[String, Double]]) extends Values {
 
-  val uniformDist = Uniform(-1, 1)(randGen)
 
-  def this(actions:Set[Action]) = {
-    this(actions.map(a => a -> new mutable.HashMap[String, Double]).toMap)
+class LinearApproximationValues(coefficients:Map[Action, mutable.HashMap[String, Double]]) extends Values {
+
+  val featureNames:Seq[String] = coefficients.head._2.keySet.toSeq.sorted
+  val reverseIndices:Map[Int, String] = featureNames.zipWithIndex.map{ case(f, ix) => ix -> f}.toMap// ++ Map(0 -> "bias")
+  val coefficientArrays:mutable.HashMap[Action, mutable.ArrayBuffer[Double]] = new  mutable.HashMap[Action, mutable.ArrayBuffer[Double]]()
+
+   coefficientArrays ++= coefficients.map{
+    case(k, v) =>
+      val buff = new mutable.ArrayBuffer[Double]()
+      featureNames map (v) foreach (i => buff += i)
+      k -> buff
   }
 
-  //val coefficients = new mutable.HashMap[String, Double]
+  def this(actions:Set[Action], features:Set[String]) = {
+    this(actions.map{
+      a =>
+        val uniformDist = Uniform(-1, 1)(randGen)
+        val map = new mutable.HashMap[String, Double]()
+        (features + "bias").map(f => f -> uniformDist.sample()).foreach(x => map += x)
+        a -> map
+    }.toMap)
+  }
 
-  val coefficientMemory:Map[Action, mutable.ArrayBuffer[DenseVector[Double]]] = coefficients.keys.map{
-    k => k -> new mutable.ArrayBuffer[DenseVector[Double]]
-  }.toMap
+  private def valuesToArray(values:Map[String, Double]):DenseVector[Double] = {
+    val v:Seq[Double] = 0 until featureNames.size map {
+      ix =>
+        if(reverseIndices(ix) == "bias"){
+          // Bias term
+          1.0
+        }
+        else{
+          val featureName = reverseIndices(ix)
+          values(featureName)
+        }
+    }
+
+    new DenseVector[Double](v.toArray)
+  }
 
   override def apply(key:(State, Action)): Double = {
 
     val action = key._2
-    val actionCoefficients = coefficients(action)
+    val actionCoefficients = coefficientArrays(action)
 
     // Encode the state vector into features
-    val features = Map("bias" -> 1.0) ++ key._1.toFeatures
+    val features = valuesToArray(key._1.toFeatures)
 
-    // Do the dot product with the coefficients
-    val products = features map {
-      case (k, v) =>
-        val coefficient = actionCoefficients.lift(k).getOrElse(uniformDist.sample())
-        coefficient*v
-    }
 
-    // Return the summation
-    products.sum
+    DenseVector(actionCoefficients.toArray).t * features
   }
 
   override def tdUpdate(current:(State, Action), next:(State, Action), reward: Double, rate: Double, decay: Double): Boolean = {
 
     val action = current._2
-    val actionCoefficients = coefficients(action)
+    val actionCoefficients = DenseVector(coefficientArrays(action).toArray)
 
     // The gradient are the feature values because this is a linear function optimizing MSE
-    val gradient = Map("bias" -> 1.0) ++ current._1.toFeatures
+    val gradient = valuesToArray(current._1.toFeatures)
 
     val currentVal = this(current)
-    val nextVal =this(next)
+    val nextVal = this(next)
 
     val ret = reward + decay*nextVal
     val delta =rate*(ret-currentVal)
 
     var change = false
 
-    // Now perform the update
-    for(k <- gradient.keys){
-      val value = actionCoefficients.lift(k).getOrElse(uniformDist.sample())
-      val newValue = value + delta*gradient(k)
-      actionCoefficients(k) = newValue
 
-      // Return whether the current changed above the requested tolerance
-      if(Math.abs(newValue - value) > tolerance)
-        change = true
+    val oldActionCoefficients = actionCoefficients
+    val newActionCoefficients= oldActionCoefficients + delta*gradient
 
-    }
+    val temp = new mutable.ArrayBuffer[Double]
+    temp ++= newActionCoefficients.toArray
+    coefficientArrays.update(action, temp)
 
-    storeCurrentCoefficients()
+    val d = newActionCoefficients - oldActionCoefficients
+    val norm = Math.sqrt(d.t * d)
+    if(norm > tolerance)
+      change = true
 
     change
   }
 
   override def toJson = {
-    val maps = coefficients.map{case (k, v) =>
+    val maps = (Map()++ coefficientArrays).map {
+      case (k, v) =>
 
-      val values = v.toMap
-      if(values.size > 0)
-        (k.toString -> Some(values))
-      else
-        (k.toString -> None)
+        val values = v.toArray.zipWithIndex.map {
+          case (v, ix) =>
+            reverseIndices(ix) -> v
+        }.toMap
+
+        if(values.nonEmpty)
+          k.toString -> Some(values)
+        else
+          k.toString -> None
+
 
     }
+
 
 
     ("type" -> "linear") ~
       ("coefficients" -> maps)
   }
 
-  private def storeCurrentCoefficients(): Unit ={
-    for(action <- coefficients.keys){
-      val localCoefficients = coefficients(action)
-      val keys = localCoefficients.keySet.toSeq.sorted
-      val vals = keys map localCoefficients
-      coefficientMemory(action) += DenseVector(vals.toArray)
-    }
-  }
 }

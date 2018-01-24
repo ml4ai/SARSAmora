@@ -59,10 +59,14 @@ class QLearning(environmentFabric:() => Option[Environment], episodeBound:Int, b
           val possibleStates = environment.observeStates
 
           // Evaluate the policy
-          var (currentState, currentAction) = policy.selectAction(possibleStates, environment.possibleActions())
+
 
           // Enter into the episode loop
           while(!environment.finishedEpisode){
+
+            // TODO: Verify this step in the book!!
+            var (currentState, currentAction) = policy.selectAction(possibleStates, environment.possibleActions())
+
             // Execute chosen action and observe reward
             val reward = environment.executePolicy(currentAction)
 
@@ -91,7 +95,7 @@ class QLearning(environmentFabric:() => Option[Environment], episodeBound:Int, b
             episodeObserver match {
               case Some(observer) =>
                 // Fill the observation
-                val observation = IterationObservation(environment, episodeCount,
+                val observation = IterationObservation(environment, iterationCounter,
                   alpha, gamma,
                   currentState, currentAction,
                   reward, nextState, nextAction

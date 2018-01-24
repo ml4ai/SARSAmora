@@ -38,12 +38,13 @@ class EpGreedyPolicy(epsilons:Iterator[Double], val values:Values) extends Polic
     val numActions = possibleActions.size
 
     val slice = epsilon / numActions
-    val greedyProb = 1 - epsilon + slice
+    val greedyProb = 1 - epsilon
+    val nonGreedySlice = if(numActions > 1) epsilon/(numActions-1) else 0.0
 
     val stateActions:Seq[(State, Action)] = ss zip possibleActions  //TODO: The order of this matters! Figure out why
     val stateActionValues = stateActions map (k => values(k))
     val sortedActions = stateActions.zip(stateActionValues).sortBy{case(sa, v) => v}.map(_._1._2).reverse
-    val probs = greedyProb::List.fill(numActions-1)(slice)
+    val probs = greedyProb::List.fill(numActions-1)(nonGreedySlice)
 
     // Do a random sample from a multinomial distribution using probs as parameter
     implicit val rand = randGen // This sets the random number generator for the

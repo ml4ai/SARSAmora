@@ -25,11 +25,11 @@ class SARSA(environmentFabric:() => Option[Environment], episodeBound:Int, burnI
   // Control variables
   var episodeCount = 0
   // Lower bound to the learning rate
-  val alphaFloor = 0.00001
+  val alphaFloor = 0.001
 
   // TODO: Parameterize this
   // Cool-down schedule for the leraning rate
-  val alphas: Iterator[Double] = Decays.exponentialDecay(alpha, alphaFloor, episodeBound, 500).iterator
+  val alphas: Iterator[Double] = Decays.exponentialDecay(alpha, alphaFloor, episodeBound, 0).iterator
 
 
   /**
