@@ -15,21 +15,26 @@ import org.sarsamora.environment._
   *                          environments and episode numbers
   * @param episodeBound Upper limit on the number of episodes to iterate through
   * @param burnInEpisodes Minimum amount of episodes to iterate before stopping
-  * @param alpha Learning rate
+  * @param alphas Learning rate stream
   * @param gamma Discount factor
   */
-class SARSA(environmentFabric:() => Option[Environment], episodeBound:Int, burnInEpisodes:Int, alpha:Double = 0.01, gamma:Double = 0.8) extends LazyLogging {
+class SARSA(environmentFabric:() => Option[Environment], episodeBound:Int, burnInEpisodes:Int, alphas:Iterator[Double], gamma:Double = 0.8) extends LazyLogging {
 
   // Stability flag controlling convergende
   var stable = true
   // Control variables
   var episodeCount = 0
   // Lower bound to the learning rate
-  val alphaFloor = 0.001
+  //val alphaFloor = 0.001
 
-  // TODO: Parameterize this
-  // Cool-down schedule for the leraning rate
-  val alphas: Iterator[Double] = Decays.exponentialDecay(alpha, alphaFloor, episodeBound, 0).iterator
+
+  def this(environmentFabric:() => Option[Environment], episodeBound:Int, burnInEpisodes:Int, alpha:Double, gamma:Double){
+    this(environmentFabric, episodeBound, burnInEpisodes, Stream.continually[Double](alpha).iterator, gamma)
+  }
+
+//  // TODO: Parameterize this
+//  // Cool-down schedule for the leraning rate
+//  val alphas: Iterator[Double] = Decays.exponentialDecay(alpha, alphaFloor, episodeBound, 0).iterator
 
 
   /**
@@ -93,7 +98,7 @@ class SARSA(environmentFabric:() => Option[Environment], episodeBound:Int, burnI
               case Some(observer) =>
                 // Fill the observation
                 val observation = IterationObservation(environment, iterationCounter,
-                  alpha, gamma,
+                  currentAlpha, gamma,
                   currentState, currentAction,
                   reward, nextState, nextAction
                 )
