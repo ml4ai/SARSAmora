@@ -13,4 +13,5 @@ case class Discrete(currentState:Int, numStates:Int) extends State {
         s"state_$s" -> atState
     }.toMap
   }
+
 }
