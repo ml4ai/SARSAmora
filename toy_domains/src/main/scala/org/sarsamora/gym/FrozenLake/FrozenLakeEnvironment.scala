@@ -1,10 +1,10 @@
 package org.sarsamora.gym.FrozenLake
 
+import me.shadaj.scalapy.py.{DynamicObject, Object}
 import org.sarsamora.actions.Action
-import org.sarsamora.states.State
 import org.sarsamora.gym.JepEnvironment
 import org.sarsamora.gym.observation_spaces.Discrete
-import me.shadaj.scalapy.py.{DynamicObject, Module, Object}
+import org.sarsamora.states.State
 
 import scala.collection.JavaConversions._
 
@@ -18,7 +18,7 @@ class FrozenLakeEnvironment(val map_name:String, val slippery:Boolean) extends J
   private val env = Object(envString).asInstanceOf[DynamicObject]
 
   // Get the number of states
-  val cardinality = env.observation_space.n.value.asInstanceOf[Int]
+  val cardinality: Int = env.observation_space.n.value.asInstanceOf[Int]
 
   // Initialize the environment
   var currentState:Discrete = Discrete(0, cardinality)
@@ -49,7 +49,7 @@ class FrozenLakeEnvironment(val map_name:String, val slippery:Boolean) extends J
     * Possible actions to take at the current state of the environment
     * @return Sequence with FrozenLake actions
     */
-  override def possibleActions() = Seq(Up(), Down(), Left(), Right())
+  override def possibleActions = Seq(Up(), Down(), Left(), Right())
 
   /**
     * Controls the environment
@@ -57,7 +57,7 @@ class FrozenLakeEnvironment(val map_name:String, val slippery:Boolean) extends J
     * @param persist Whether the outcome will persist on the state of this instance
     * @return Observed reward
     */
-  override def executePolicy(action: Action, persist: Boolean) = {
+  override def execute(action: Action, persist: Boolean): Double = {
 
     // Cast the action into a FrozenLakeAction
     val frozenAction = action.asInstanceOf[FrozenLakeAction]
@@ -87,8 +87,6 @@ class FrozenLakeEnvironment(val map_name:String, val slippery:Boolean) extends J
     */
   override def observeState:State = currentState
 
-
-  override def observeStates:Seq[State] = Seq.fill(possibleActions.size)(currentState) // TODO: Fix this, it should be transparent to the user
 
   /**
     * Whether the episode has finished

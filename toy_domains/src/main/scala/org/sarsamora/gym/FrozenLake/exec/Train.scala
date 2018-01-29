@@ -1,10 +1,12 @@
 package org.sarsamora.gym.FrozenLake.exec
 
+import org.sarsamora.Decays
 import org.sarsamora.actions.Action
-import org.sarsamora.gym.FrozenLake.{Down, FrozenLakeEnvironment, Left, Right, Up}
-import org.sarsamora.gym.observation_spaces.Discrete
-import org.sarsamora.policies.{EpGreedyPolicy, LinearApproximationValues}
-import org.sarsamora.policy_iteration.td.{EpisodeObservation, EpisodeObserver, IterationObservation, SARSA}
+import org.sarsamora.gym.FrozenLake._
+import org.sarsamora.policies.EpGreedyPolicy
+import org.sarsamora.policy_iteration.td.SARSA
+import org.sarsamora.policy_iteration.{EpisodeObservation, EpisodeObserver, IterationObservation}
+import org.sarsamora.value_functions.TabularActionValues
 
 /**
   * Learn a FrozenLake policy
@@ -12,10 +14,11 @@ import org.sarsamora.policy_iteration.td.{EpisodeObservation, EpisodeObserver, I
 object Train extends App{
 
   // Hyper parameters
-  val numEpisodes = 5000
-  val burnInEpisodes = 100
-  val learningRate = 1.0
+  val numEpisodes = 20000
+  val burnInEpisodes = 1000
+  val learningRate = 2.0
   val decay = 1.0
+  val lambda = 1
   ///////////////////
 
   // Environment instantiation
@@ -24,12 +27,12 @@ object Train extends App{
   ////////////////////////////
 
   // Value function type: Tabular, linear approximation, etc.
-  val qFunction = new LinearApproximationValues(activeActions, new Discrete(0, environment.cardinality).toFeatures.keySet)
-  //val qFunction = new TabularValues()
+  //val qFunction = new LinearApproximationValues(activeActions, new Discrete(0, environment.cardinality).toFeatures.keySet)
+  val qFunction = new TabularActionValues()
 
   // Exploration parameter for epsilon-greedy policies
-  val epsilon = 0.2
-
+  val epsilon = 0.3
+  val epsilons = Decays.exponentialDecay(epsilon, 0.00, numEpisodes, 0).iterator
   // Epsilon greedy policy to iterate, takes as parameters the explorations and the value function instance
   val initialPolicy = new EpGreedyPolicy(epsilon, qFunction)
   /////////////////
@@ -43,7 +46,7 @@ object Train extends App{
       environment.reset()
       Some(environment)
     }
-    , numEpisodes, burnInEpisodes, learningRate, decay)
+    , numEpisodes, burnInEpisodes, learningRate, decay, lambda)
   /////////////////////
 
 
@@ -76,7 +79,7 @@ object Train extends App{
   ////////////////////////////////////////////////////////////
 
   // Run the learning algorithm. Observe how it also returns the convergence status as well as the iterated policy
-  val (learntPolicy, convergenceStatus) = policyIteration.iteratePolicy(initialPolicy, Some(iterationObserver))
+  val (learntPolicy, convergenceStatus) = policyIteration.iteratePolicy(initialPolicy/*, Some(iterationObserver)*/)
 
   // Serialize the learnt policy to a json file
   learntPolicy.save(s"$environment.json")

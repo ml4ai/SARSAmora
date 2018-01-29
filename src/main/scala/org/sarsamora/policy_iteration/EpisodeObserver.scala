@@ -1,4 +1,4 @@
-package org.sarsamora.policy_iteration.td
+package org.sarsamora.policy_iteration
 
 import org.sarsamora.actions.Action
 import org.sarsamora.environment.Environment

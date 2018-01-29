@@ -38,9 +38,9 @@ object Test extends App{
     if(!visitedStates.contains(currentState)) {
       visitedStates += currentState
       // Select the action given the current state and the possible actions
-      val action = policy.selectAction(currentState, environment.possibleActions())._2
+      val action = policy.selectAction(currentState, environment.possibleActions)._2
       // Accumulate the observed reward
-      reward += environment.executePolicy(action)
+      reward += environment.execute(action)
       // Draw the board
       environment.render()
     }

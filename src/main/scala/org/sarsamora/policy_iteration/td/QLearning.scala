@@ -4,6 +4,10 @@ import com.typesafe.scalalogging.LazyLogging
 import org.sarsamora.Decays
 import org.sarsamora.environment._
 import org.sarsamora.policies._
+import org.sarsamora.policy_iteration.td.value_functions.TDUpdate
+import org.sarsamora.policy_iteration.{EpisodeObservation, EpisodeObserver, IterationObservation}
+
+// TODO: Factorize common code from Q-Learning and SARSA
 
 /**
   * Iterates a policy by doing Q-Learning
@@ -17,7 +21,7 @@ import org.sarsamora.policies._
   * @param alpha Learning rate
   * @param gamma Discount factor
   */
-class QLearning(environmentFabric:() => Option[Environment], episodeBound:Int, burnInEpisodes:Int, alpha:Double = 0.01, gamma:Double = 0.8) extends LazyLogging {
+class QLearning(environmentFabric:() => Option[Environment], episodeBound:Int, burnInEpisodes:Int, alpha:Double = 0.01, gamma:Double = 0.8, lambda:Double = 1.0) extends LazyLogging {
 
   // Stability flag controlling convergende
   var stable = true
@@ -65,14 +69,14 @@ class QLearning(environmentFabric:() => Option[Environment], episodeBound:Int, b
           while(!environment.finishedEpisode){
 
             // TODO: Verify this step in the book!!
-            var (currentState, currentAction) = policy.selectAction(possibleStates, environment.possibleActions())
+            var (currentState, currentAction) = policy.selectAction(possibleStates, environment.possibleActions)
 
             // Execute chosen action and observe reward
-            val reward = environment.executePolicy(currentAction)
+            val reward = environment.execute(currentAction)
 
             // Observe the new state after executing the action
             val possibleNextStates = environment.observeStates
-            val possibleNextActions = environment.possibleActions()
+            val possibleNextActions = environment.possibleActions
 
             // Evaluate all the q-values of the state/action pairs
             val choices = (possibleNextStates zip possibleNextActions).sortBy{case (s, a) => policy.values(s, a)}.reverse
@@ -82,8 +86,12 @@ class QLearning(environmentFabric:() => Option[Environment], episodeBound:Int, b
 
 
             // Perform the update
-            val actionValues = policy.values
-            val changed = actionValues.tdUpdate((currentState, currentAction), (nextState, nextAction), reward, currentAlpha, gamma)
+            val actionValues = policy.values match {
+              case v:TDUpdate => v
+              case _ => throw new IllegalArgumentException("Action values don't implement TD update")
+            }
+
+            val changed = actionValues.tdUpdate((currentState, currentAction), (nextState, nextAction), reward, currentAlpha, gamma, lambda)
 
             // Keep track of the fluctuations of the values
             if(changed)

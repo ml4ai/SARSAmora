@@ -1,6 +1,6 @@
 package org.sarsamora.gym.FrozenLake.exec
 
-import org.sarsamora.gym.FrozenLake.{FrozenLakeEnvironment, FrozenLakeActionsActionValues}
+import org.sarsamora.gym.FrozenLake.{FrozenLakeActionsActionValues, FrozenLakeEnvironment}
 import org.sarsamora.policies.{EpGreedyPolicy, Policy}
 
 import scala.collection.mutable
@@ -42,9 +42,9 @@ object Test extends App {
       // Observe the current state of the environment
       val currentState = environment.observeState
       // Select the action given the current state and the possible actions
-      val action = policy.selectAction(currentState, environment.possibleActions())._2
+      val action = policy.selectAction(currentState, environment.possibleActions)._2
       // Accumulate the observed reward
-      reward += environment.executePolicy(action)
+      reward += environment.execute(action)
       // Draw the board
       environment.render()
     }

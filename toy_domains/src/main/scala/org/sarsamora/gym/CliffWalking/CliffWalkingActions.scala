@@ -3,7 +3,7 @@ package org.sarsamora.gym.CliffWalking
 import org.json4s.DefaultFormats
 import org.json4s.JsonAST.{JObject, JValue}
 import org.sarsamora.actions.Action
-import org.sarsamora.policies.ActionValueLoader
+import org.sarsamora.value_functions.ActionValueLoader
 
 import scala.collection.mutable
 
@@ -16,7 +16,7 @@ case class Right() extends CliffWalkingAction(1)
 
 
 class CliffWalkingActionsActionValues extends ActionValueLoader {
-  implicit lazy val formats = DefaultFormats
+  implicit lazy val formats: DefaultFormats.type = DefaultFormats
 
 
   private def extractCoefficients(ast:JValue, name:CliffWalkingAction):Option[(Action, mutable.HashMap[String, Double])] = {
@@ -35,7 +35,7 @@ class CliffWalkingActionsActionValues extends ActionValueLoader {
     }
   }
 
-  override def loadActionValues(ast:JObject) = {
+  override def loadActionValues(ast:JObject): Map[Action, collection.Map[String, Double]] = {
 
     val coefficients = ast \ "coefficients"
     val up = extractCoefficients(coefficients, Up())

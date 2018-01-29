@@ -5,6 +5,7 @@ package org.sarsamora.actions
   */
 
 
+/**
+  * Base class for all the actions for an MDP
+  */
 abstract class Action
-
-case class DummyAction() extends Action

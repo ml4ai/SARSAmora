@@ -1,9 +1,10 @@
 package org.sarsamora.policy_iteration.td
 
-import org.sarsamora.Decays
-import org.sarsamora.policies._
 import com.typesafe.scalalogging.LazyLogging
 import org.sarsamora.environment._
+import org.sarsamora.policies._
+import org.sarsamora.policy_iteration.td.value_functions.TDUpdate
+import org.sarsamora.policy_iteration.{EpisodeObservation, EpisodeObserver, IterationObservation}
 
 
 /**
@@ -18,23 +19,17 @@ import org.sarsamora.environment._
   * @param alphas Learning rate stream
   * @param gamma Discount factor
   */
-class SARSA(environmentFabric:() => Option[Environment], episodeBound:Int, burnInEpisodes:Int, alphas:Iterator[Double], gamma:Double = 0.8) extends LazyLogging {
+class SARSA(environmentFabric:() => Option[Environment], episodeBound:Int, burnInEpisodes:Int, alphas:Iterator[Double], gamma:Double = 0.8, lambda:Double = 1.0) extends LazyLogging {
 
-  // Stability flag controlling convergende
+  // Stability flag controlling convergence
   var stable = true
   // Control variables
   var episodeCount = 0
-  // Lower bound to the learning rate
-  //val alphaFloor = 0.001
 
 
-  def this(environmentFabric:() => Option[Environment], episodeBound:Int, burnInEpisodes:Int, alpha:Double, gamma:Double){
-    this(environmentFabric, episodeBound, burnInEpisodes, Stream.continually[Double](alpha).iterator, gamma)
+  def this(environmentFabric:() => Option[Environment], episodeBound:Int, burnInEpisodes:Int, alpha:Double, gamma:Double, lambda:Double){
+    this(environmentFabric, episodeBound, burnInEpisodes, Stream.continually[Double](alpha).iterator, gamma, lambda)
   }
-
-//  // TODO: Parameterize this
-//  // Cool-down schedule for the leraning rate
-//  val alphas: Iterator[Double] = Decays.exponentialDecay(alpha, alphaFloor, episodeBound, 0).iterator
 
 
   /**
@@ -62,30 +57,38 @@ class SARSA(environmentFabric:() => Option[Environment], episodeBound:Int, burnI
 
           val currentAlpha = alphas.next
 
-          // TODO: Explain why the initial state could be multiple states
-          // Observe the initial state
+          /* Observe the initial state(s):
+           *
+           * There can be different values for the current state if one of the actions require different values
+           * for the same property of the state. I'm aware that this looks fishy and may remove it in a future version
+           * of SARSAmora. This is mainly a hack to test an idea of FocusedReading.
+           */
           val possibleStates = environment.observeStates
 
           // Evaluate the policy
-          var (currentState, currentAction) = policy.selectAction(possibleStates, environment.possibleActions())
+          var (currentState, currentAction) = policy.selectAction(possibleStates, environment.possibleActions)
 
 
 
           // Enter into the episode loop
           while(!environment.finishedEpisode){
             // Execute chosen action and observe reward
-            val reward = environment.executePolicy(currentAction)
+            val reward = environment.execute(currentAction)
 
             // Observe the new state after executing the action
             val possibleNextStates = environment.observeStates
 
             // Chose a new action
-            val (nextState, nextAction) = policy.selectAction(possibleNextStates, environment.possibleActions())
+            val (nextState, nextAction) = policy.selectAction(possibleNextStates, environment.possibleActions)
 
 
             // Perform the update
-            val actionValues = policy.values
-            val changed = actionValues.tdUpdate((currentState, currentAction), (nextState, nextAction), reward, currentAlpha, gamma)
+            val actionValues = policy.values match {
+              case v:TDUpdate => v
+              case _ => throw new IllegalArgumentException("Action values don't implement the TD Update")
+            }
+
+            val changed = actionValues.tdUpdate((currentState, currentAction), (nextState, nextAction), reward, currentAlpha, gamma, lambda)
 
             // Keep track of the fluctuations of the values
             if(changed)

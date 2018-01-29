@@ -2,7 +2,6 @@ package org.sarsamora.gym.CliffWalking
 
 import me.shadaj.scalapy.py.{DynamicObject, Object}
 import org.sarsamora.actions.Action
-import org.sarsamora.gym.CliffWalking._
 import org.sarsamora.gym.JepEnvironment
 import org.sarsamora.gym.observation_spaces.Discrete
 import org.sarsamora.states.State
@@ -17,8 +16,10 @@ class CliffWalkingEnvironment extends JepEnvironment{
   private val envString = s"CliffWalkingEnv()"
   private val env = Object(envString).asInstanceOf[DynamicObject]
 
+  var iterationCounter = 0
+
   // Get the number of states
-  val cardinality = env.observation_space.n.value.asInstanceOf[Int]
+  val cardinality: Int = env.observation_space.n.value.asInstanceOf[Int]
 
   // Initialize the environment
   var currentState:Discrete = Discrete(36, cardinality)
@@ -36,6 +37,7 @@ class CliffWalkingEnvironment extends JepEnvironment{
     // Reset the state of the environment
     currentState = Discrete(36, cardinality)
     done = false
+    iterationCounter = 0
   }
 
   /**
@@ -49,7 +51,7 @@ class CliffWalkingEnvironment extends JepEnvironment{
     * Possible actions to take at the current state of the environment
     * @return Sequence with CliffWalking actions
     */
-  override def possibleActions() = Seq(Up(), Down(), Left(), Right())
+  override def possibleActions = Seq(Up(), Down(), Left(), Right())
 
   /**
     * Controls the environment
@@ -57,7 +59,7 @@ class CliffWalkingEnvironment extends JepEnvironment{
     * @param persist Whether the outcome will persist on the state of this instance
     * @return Observed reward
     */
-  override def executePolicy(action: Action, persist: Boolean) = {
+  override def execute(action: Action, persist: Boolean): Double = {
 
     // Cast the action into a CliffWalkingAction
     val cliffWalkingAction = action.asInstanceOf[CliffWalkingAction]
@@ -77,6 +79,8 @@ class CliffWalkingEnvironment extends JepEnvironment{
     // Take note if the episode is over
     done = returnedData(2).asInstanceOf[Boolean]
 
+    iterationCounter += 1
+
     // Return the observed rewards
     reward
   }
@@ -88,13 +92,11 @@ class CliffWalkingEnvironment extends JepEnvironment{
   override def observeState:State = currentState
 
 
-  override def observeStates:Seq[State] = Seq.fill(possibleActions.size)(currentState) // TODO: Fix this, it should be transparent to the user
-
   /**
     * Whether the episode has finished
     * @return
     */
-  override def finishedEpisode:Boolean = done
+  override def finishedEpisode:Boolean = done || iterationCounter > 100
 
   /**
     * Describes the environment configuration on a string
