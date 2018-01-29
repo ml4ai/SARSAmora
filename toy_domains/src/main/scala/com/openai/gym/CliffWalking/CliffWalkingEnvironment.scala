@@ -1,9 +1,9 @@
-package org.sarsamora.gym.CliffWalking
+package com.openai.gym.CliffWalking
 
+import com.openai.gym.JepEnvironment
+import com.openai.gym.observation_spaces.Discrete
 import me.shadaj.scalapy.py.{DynamicObject, Object}
 import org.sarsamora.actions.Action
-import org.sarsamora.gym.JepEnvironment
-import org.sarsamora.gym.observation_spaces.Discrete
 import org.sarsamora.states.State
 
 import scala.collection.JavaConversions._

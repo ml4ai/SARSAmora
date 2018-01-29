@@ -1,10 +1,10 @@
-package org.sarsamora.gym.CliffWalking.exec
+package com.openai.gym.CliffWalking.exec
 
 import java.io._
 
+import com.openai.gym.CliffWalking._
 import org.sarsamora.Decays
 import org.sarsamora.actions.Action
-import org.sarsamora.gym.CliffWalking._
 import org.sarsamora.policies.EpGreedyPolicy
 import org.sarsamora.policy_iteration.mc.MonteCarlo
 import org.sarsamora.policy_iteration.mc.value_functions.TabularActionValues

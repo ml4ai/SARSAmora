@@ -1,9 +1,9 @@
-package org.sarsamora.gym
+package com.openai.gym
 
-import org.sarsamora.environment.Environment
 import jep.Jep
 import me.shadaj.scalapy.py
 import me.shadaj.scalapy.py.Module
+import org.sarsamora.environment.Environment
 
 
 /***

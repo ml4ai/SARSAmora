@@ -1,6 +1,6 @@
-package org.sarsamora.gym.FrozenLake.exec
+package com.openai.gym.FrozenLake.exec
 
-import org.sarsamora.gym.FrozenLake.{FrozenLakeActionsActionValues, FrozenLakeEnvironment}
+import com.openai.gym.FrozenLake.{FrozenLakeActionsActionValues, FrozenLakeEnvironment}
 import org.sarsamora.policies.{EpGreedyPolicy, Policy}
 
 import scala.collection.mutable

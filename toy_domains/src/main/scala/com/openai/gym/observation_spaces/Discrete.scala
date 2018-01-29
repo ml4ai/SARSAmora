@@ -1,4 +1,4 @@
-package org.sarsamora.gym.observation_spaces
+package com.openai.gym.observation_spaces
 
 import org.sarsamora.states.State
 

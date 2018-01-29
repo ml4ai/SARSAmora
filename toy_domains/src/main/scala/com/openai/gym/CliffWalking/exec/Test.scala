@@ -1,7 +1,7 @@
-package org.sarsamora.gym.CliffWalking.exec
+package com.openai.gym.CliffWalking.exec
 
-import org.sarsamora.gym.CliffWalking._
-import org.sarsamora.gym.observation_spaces._
+import com.openai.gym.CliffWalking._
+import com.openai.gym.observation_spaces._
 import org.sarsamora.policies.{EpGreedyPolicy, Policy}
 
 import scala.collection.mutable

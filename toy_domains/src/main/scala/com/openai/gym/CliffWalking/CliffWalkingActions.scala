@@ -1,4 +1,4 @@
-package org.sarsamora.gym.FrozenLake
+package com.openai.gym.CliffWalking
 
 import org.json4s.DefaultFormats
 import org.json4s.JsonAST.{JObject, JValue}
@@ -7,19 +7,19 @@ import org.sarsamora.value_functions.ActionValueLoader
 
 import scala.collection.mutable
 
-abstract class FrozenLakeAction(val id:Int) extends Action
+abstract class CliffWalkingAction(val id:Int) extends Action
 
-case class Up() extends FrozenLakeAction(3)
-case class Down() extends FrozenLakeAction(1)
-case class Left() extends FrozenLakeAction(0)
-case class Right() extends FrozenLakeAction(2)
+case class Up() extends CliffWalkingAction(0)
+case class Down() extends CliffWalkingAction(2)
+case class Left() extends CliffWalkingAction(3)
+case class Right() extends CliffWalkingAction(1)
 
 
-class FrozenLakeActionsActionValues extends ActionValueLoader {
+class CliffWalkingActionsActionValues extends ActionValueLoader {
   implicit lazy val formats: DefaultFormats.type = DefaultFormats
 
 
-  private def extractCoefficients(ast:JValue, name:FrozenLakeAction):Option[(Action, mutable.HashMap[String, Double])] = {
+  private def extractCoefficients(ast:JValue, name:CliffWalkingAction):Option[(Action, mutable.HashMap[String, Double])] = {
     ast \ name.toString match {
       case JObject(obj) =>
         val coefficients = new mutable.HashMap[String, Double]()

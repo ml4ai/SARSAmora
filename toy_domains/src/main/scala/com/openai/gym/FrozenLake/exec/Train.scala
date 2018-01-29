@@ -1,8 +1,8 @@
-package org.sarsamora.gym.FrozenLake.exec
+package com.openai.gym.FrozenLake.exec
 
+import com.openai.gym.FrozenLake._
 import org.sarsamora.Decays
 import org.sarsamora.actions.Action
-import org.sarsamora.gym.FrozenLake._
 import org.sarsamora.policies.EpGreedyPolicy
 import org.sarsamora.policy_iteration.td.SARSA
 import org.sarsamora.policy_iteration.{EpisodeObservation, EpisodeObserver, IterationObservation}
