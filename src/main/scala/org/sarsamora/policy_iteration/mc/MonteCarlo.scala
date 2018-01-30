@@ -13,7 +13,7 @@ import scala.collection.mutable
   * Policy iteration with MonteCarlo sampling of the episodes
   */
 class MonteCarlo(environmentFabric:() => Option[Environment], episodeBound:Int, burnInEpisodes:Int,
-                 firstVisit:Boolean = true, maxThreads:Int = 1)
+                 firstVisit:Boolean = true, maxThreads:Int = 1, tolerance: Double = org.sarsamora.convergenceTolerance)
   extends PolicyIterator(environmentFabric, episodeBound, burnInEpisodes)
   {
 
@@ -45,7 +45,8 @@ class MonteCarlo(environmentFabric:() => Option[Environment], episodeBound:Int, 
           val actionMemory = new mutable.ListBuffer[Action]()
           val rewardMemory = new mutable.ListBuffer[Double]()
 
-          var (currentState, currentAction) = policy.selectAction(environment.observeStates, environment.possibleActions)
+          var currentState = environment.observeState
+          var currentAction = policy.selectAction(currentState, environment.possibleActions)
 
           // Repeat while the episode finishes
           while(!environment.finishedEpisode){
@@ -61,7 +62,8 @@ class MonteCarlo(environmentFabric:() => Option[Environment], episodeBound:Int, 
             rewardMemory += reward
 
             // Observe the next state and action
-            val (nextState, nextAction) = policy.selectAction(environment.observeStates, environment.possibleActions)
+            val nextState = environment.observeState
+            val nextAction = policy.selectAction(nextState, environment.possibleActions)
 
             val prevState = currentState
             val prevAction = currentAction
@@ -89,13 +91,13 @@ class MonteCarlo(environmentFabric:() => Option[Environment], episodeBound:Int, 
             case _ => throw new IllegalArgumentException("The action-values don't implement MC update")
           }
 
-          // Put together the observaitons
+          // Put together the observations
           val sample = stateMemory zip actionMemory zip rewardMemory map {
             case ((s, a), r) => (s,a,r)
           }
 
           // Do the update, and if it didn't change the action values, the policy converged
-          stable = !actionValues.mcUpdate(sample, firstVisit)
+          stable = !actionValues.mcUpdate(sample, firstVisit, tolerance)
 
         // In case we ran out of environments, we're done
         case None => Unit
@@ -110,7 +112,7 @@ class MonteCarlo(environmentFabric:() => Option[Environment], episodeBound:Int, 
       episodeObserver match {
         case Some(observer) =>
           // Fill the observation
-          val observation = EpisodeObservation(prevEpisode.get, iterationCounter, episode.isEmpty, stable)
+          val observation = EpisodeObservation(prevEpisode.get, iterationCounter, episodeCount, episode.isEmpty, stable)
           // Pass to observer
           observer.episodeFinished(observation)
         case None => Unit

@@ -16,14 +16,14 @@ import scala.language.implicitConversions
   */
 abstract class Policy {
 
-  /**
-    * Given a sequence of potentially different states and a sequence of actions, pick a pair to direct the environment
-    * @param ss Sequence of actions. Usually they will be the same, but this method allows to use a different state
-    *           paired with particular actions. Should have the same length as the sequence of possible actions
-    * @param possibleActions Sequence of actions that can be taken at the current moment
-    * @return Pair of state an action that were chosen by the policy.
-    */
-  def selectAction(ss:Seq[State], possibleActions:Seq[Action]):(State, Action)
+//  /**
+//    * Given a sequence of potentially different states and a sequence of actions, pick a pair to direct the environment
+//    * @param ss Sequence of actions. Usually they will be the same, but this method allows to use a different state
+//    *           paired with particular actions. Should have the same length as the sequence of possible actions
+//    * @param possibleActions Sequence of actions that can be taken at the current moment
+//    * @return Pair of state an action that were chosen by the policy.
+//    */
+//  def selectAction(ss:Seq[State], possibleActions:Seq[Action]):(State, Action)
 
   /**
     * Selects an action given the current state of the environment
@@ -31,10 +31,7 @@ abstract class Policy {
     * @param possibleActions Sequence of possible actions to chose from
     * @return Pair with the current state and the action chosen by the policy
     */
-  def selectAction(s:State, possibleActions:Seq[Action]):(State, Action) = {
-    val ss = Seq.fill(possibleActions.size)(s)
-    selectAction(ss, possibleActions)
-  }
+  def selectAction(s:State, possibleActions:Seq[Action]):Action
 
   // Save the policy as json
   def save(path:String)

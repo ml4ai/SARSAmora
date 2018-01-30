@@ -32,14 +32,10 @@ trait Environment {
     */
   def observeState:State
 
-  /**
-    * Observe a sequence of alternative current states. They can be used as a function of an action in pair with it.
-    * The default implementation if to return only the current state.
-    *
-    * @return Sequence of alternative current states
-    */
-  def observeStates:Seq[State] = Seq(observeState)
 
-  // Whether the current episode within the environment has finished
+  /**
+    * Whether the current episode within the environment has finished
+    * @return
+    */
   def finishedEpisode:Boolean
 }

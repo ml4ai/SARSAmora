@@ -6,8 +6,9 @@ import com.openai.gym.CliffWalking._
 import org.sarsamora.Decays
 import org.sarsamora.actions.Action
 import org.sarsamora.policies.EpGreedyPolicy
-import org.sarsamora.policy_iteration.mc.MonteCarlo
-import org.sarsamora.policy_iteration.mc.value_functions.TabularActionValues
+//import org.sarsamora.policy_iteration.mc.value_functions.TabularActionValues
+import org.sarsamora.policy_iteration.td.SARSA
+import org.sarsamora.policy_iteration.td.value_functions.TabularActionValues
 import org.sarsamora.policy_iteration.{EpisodeObservation, EpisodeObserver, IterationObservation}
 
 import scala.collection.mutable
@@ -15,10 +16,10 @@ import scala.collection.mutable
 
 object Train extends App{
   // Hyper parameters
-  val numEpisodes = 300000
+  val numEpisodes = 30000
   val burnInEpisodes = 0
-  val learningRate = 1
-  val decay =   0.5
+  val learningRate = 0.3
+  val decay =   1.0
   val lambda = 1.0
   ///////////////////
 
@@ -32,33 +33,34 @@ object Train extends App{
   val qFunction = new TabularActionValues()
 
   // Exploration parameter for epsilon-greedy policies
-  val epsilon = 0.03
-  //val epsilons = Decays.linearDecay(epsilon, 0.001, numEpisodes, 0).iterator
+  val epsilon = 0.1
+  val epsilons = Decays.linearDecay(epsilon, 0.000, numEpisodes, 0).iterator
 
   // Epsilon greedy policy to iterate, takes as parameters the explorations and the value function instance
-  val initialPolicy = new EpGreedyPolicy(epsilon, qFunction)
+  val initialPolicy = new EpGreedyPolicy(epsilons, qFunction)
   /////////////////
 
 
   // Learning algorithm
   val alphas = Decays.exponentialDecay(learningRate, 0.001, numEpisodes, 0).iterator
-//  val policyIteration = new SARSA(
-//    // Anonymous episode fabric. Each time an episode finished, this is called to return a fresn environment
-//    // to start the next episode
-//    () => {
-//      environment.reset()
-//      Some(environment)
-//    }
-//    , numEpisodes, burnInEpisodes, learningRate, decay, lambda)
-
-  var episodeNumber = 0
-  val policyIteration = new MonteCarlo(
+  val policyIteration = new SARSA(
+    // Anonymous episode fabric. Each time an episode finished, this is called to return a fresn environment
+    // to start the next episode
     () => {
       episodeNumber += 1
       environment.reset()
       Some(environment)
-    }, numEpisodes, burnInEpisodes, true
-  )
+    }
+    , numEpisodes, burnInEpisodes, learningRate, decay, lambda)
+
+  var episodeNumber = 0
+//  val policyIteration = new MonteCarlo(
+//    () => {
+//      episodeNumber += 1
+//      environment.reset()
+//      Some(environment)
+//    }, numEpisodes, burnInEpisodes, true, tolerance=1e-3
+//  )
   /////////////////////
 
 

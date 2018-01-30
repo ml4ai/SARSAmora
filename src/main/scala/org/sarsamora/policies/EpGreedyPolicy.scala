@@ -36,15 +36,13 @@ class EpGreedyPolicy(epsilons:Iterator[Double], val values:ActionValues) extends
   /**
     * Select an action given the current state of the environment
     *
-    * @param ss Sequence of actions. Usually they will be the same, but this method allows to use a different state
+    * @param s Sequence of actions. Usually they will be the same, but this method allows to use a different state
     *           paired with particular actions. Should have the same length as the sequence of possible actions
     * @param possibleActions Sequence of actions that can be taken at the current moment
     * @return Pair of state an action that were chosen by the policy.
     */
-  override def selectAction(ss:Seq[State], possibleActions:Seq[Action]):(State, Action) = {
+  override def selectAction(s:State, possibleActions:Seq[Action]):Action = {
 
-    // The number of states and possible actions must be the same
-    assert(ss.size == possibleActions.size, s"Number of states and possible actions are not equal")
 
     // Fetch the next value of epsilon
     val epsilon = epsilons.next()
@@ -65,7 +63,7 @@ class EpGreedyPolicy(epsilons:Iterator[Double], val values:ActionValues) extends
     val nonGreedySlice = if(numActions > 1) epsilon/(numActions-1) else 0.0
 
     // Pair together the states and the actions
-    val stateActions:Seq[(State, Action)] = ss zip possibleActions
+    val stateActions:Seq[(State, Action)] = possibleActions map (a => (s, a))
     // Evaluate them according to the action-value function
     val stateActionValues = stateActions map (k => values(k))
     // Sort the actions decreasingly according to their q-value
@@ -82,13 +80,8 @@ class EpGreedyPolicy(epsilons:Iterator[Double], val values:ActionValues) extends
     // Fetch the action corresponding to the sampled index
     val choice = sortedActions(choiceIx)
 
-    // Compute the index of that action on the original sequence of actions
-    val originalIndex = possibleActions.indexOf(choice)
-    // Get the state that corresponds to that action
-    val usedState = ss(originalIndex)
-
     // Return the random sample
-    (usedState, choice)
+    choice
   }
 
   /**

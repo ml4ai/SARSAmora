@@ -58,6 +58,7 @@ case class IterationObservation(
 case class EpisodeObservation(
                                environment: Environment,
                                totalIterations: Int,
+                               episodeNumber:Int,
                                lastEpisode: Boolean,
                                converged:Boolean
                              )

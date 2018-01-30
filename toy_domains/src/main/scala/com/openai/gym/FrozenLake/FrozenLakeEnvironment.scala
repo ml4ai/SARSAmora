@@ -10,6 +10,8 @@ import scala.collection.JavaConversions._
 
 class FrozenLakeEnvironment(val map_name:String, val slippery:Boolean) extends JepEnvironment {
 
+  var iterationCounter = 0
+
   // Import the frozen lake environment
   interpreter.eval("from gym.envs.toy_text.frozen_lake import FrozenLakeEnv")
 
@@ -35,6 +37,7 @@ class FrozenLakeEnvironment(val map_name:String, val slippery:Boolean) extends J
     env.reset()
     // Reset the state of the environment
     currentState = Discrete(0, cardinality)
+    iterationCounter = 0
     done = false
   }
 
@@ -77,6 +80,8 @@ class FrozenLakeEnvironment(val map_name:String, val slippery:Boolean) extends J
     // Take note if the episode is over
     done = returnedData(2).asInstanceOf[Boolean]
 
+    iterationCounter += 1
+
     // Return the observed rewards
     reward
   }
@@ -92,7 +97,7 @@ class FrozenLakeEnvironment(val map_name:String, val slippery:Boolean) extends J
     * Whether the episode has finished
     * @return
     */
-  override def finishedEpisode:Boolean = done
+  override def finishedEpisode:Boolean = done || iterationCounter > 100
 
   /**
     * Describes the environment configuration on a string

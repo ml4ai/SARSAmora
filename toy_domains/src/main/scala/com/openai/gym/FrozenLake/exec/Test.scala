@@ -19,7 +19,7 @@ object Test extends App {
   val policy = Policy.loadPolicy(policyPath, valueLoader).asInstanceOf[EpGreedyPolicy].makeGreedy
 
   // Create a new FrozenLake environment that will run the policy
-  val environment = new FrozenLakeEnvironment("4x4", true)
+  val environment = new FrozenLakeEnvironment("4x4", false)
 
   // Number of trails to execute
   val trails = 100
@@ -42,7 +42,7 @@ object Test extends App {
       // Observe the current state of the environment
       val currentState = environment.observeState
       // Select the action given the current state and the possible actions
-      val action = policy.selectAction(currentState, environment.possibleActions)._2
+      val action = policy.selectAction(currentState, environment.possibleActions)
       // Accumulate the observed reward
       reward += environment.execute(action)
       // Draw the board

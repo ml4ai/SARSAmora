@@ -9,9 +9,9 @@ import org.sarsamora.states.State
 
 import scala.collection.mutable
 
-class TabularActionValues() extends ActionValues {
+class TabularActionValues(epsilon:Double = 1e-2) extends ActionValues {
   var backEnd = new mutable.HashMap[(String, Action), Double]
-  val uniformDist: Uniform = Uniform(-1, 1)(randGen)
+  val uniformDist: Uniform = Uniform(-epsilon, epsilon)(randGen)
 
   def this(loadedBackend:collection.Map[Action, collection.Map[String, Double]]) = {
     this()
@@ -29,7 +29,7 @@ class TabularActionValues() extends ActionValues {
     if(backEnd.contains(newKey))
       backEnd(newKey)
     else{
-      val v = 0//uniformDist.sample()
+      val v = uniformDist.sample()
       backEnd += (newKey -> v)
       v
     }
@@ -50,5 +50,13 @@ class TabularActionValues() extends ActionValues {
       ("coefficients" -> x)
   }
 
+  def toStateValues:Map[String, Double] = {
+    this.backEnd.groupBy{
+      case((s, a), v) => s
+    }.mapValues{
+      y =>
+       y.values.sum
+    }
+  }
 
 }

@@ -57,16 +57,11 @@ class SARSA(environmentFabric:() => Option[Environment], episodeBound:Int, burnI
 
           val currentAlpha = alphas.next
 
-          /* Observe the initial state(s):
-           *
-           * There can be different values for the current state if one of the actions require different values
-           * for the same property of the state. I'm aware that this looks fishy and may remove it in a future version
-           * of SARSAmora. This is mainly a hack to test an idea of FocusedReading.
-           */
-          val possibleStates = environment.observeStates
+          // Observe the initial state
+          var currentState = environment.observeState
 
           // Evaluate the policy
-          var (currentState, currentAction) = policy.selectAction(possibleStates, environment.possibleActions)
+          var currentAction = policy.selectAction(currentState, environment.possibleActions)
 
 
 
@@ -76,10 +71,10 @@ class SARSA(environmentFabric:() => Option[Environment], episodeBound:Int, burnI
             val reward = environment.execute(currentAction)
 
             // Observe the new state after executing the action
-            val possibleNextStates = environment.observeStates
+            val nextState = environment.observeState
 
             // Chose a new action
-            val (nextState, nextAction) = policy.selectAction(possibleNextStates, environment.possibleActions)
+            val nextAction = policy.selectAction(nextState, environment.possibleActions)
 
 
             // Perform the update
@@ -134,7 +129,7 @@ class SARSA(environmentFabric:() => Option[Environment], episodeBound:Int, burnI
       episodeObserver match {
         case Some(observer) =>
           // Fill the observation
-          val observation = EpisodeObservation(prevEpisode.get, iterationCounter, episode.isEmpty, stable)
+          val observation = EpisodeObservation(prevEpisode.get, iterationCounter, episodeCount, episode.isEmpty, stable)
           // Pass to observer
           observer.episodeFinished(observation)
         case None => Unit

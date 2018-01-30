@@ -15,6 +15,8 @@ object Test extends App{
   // Load a serialized policy and make it greedy
   val policy = Policy.loadPolicy(policyPath, valueLoader).asInstanceOf[EpGreedyPolicy].makeGreedy
 
+  //val stateValues = policy.values.toStateValues
+
   // Create a new FrozenLake environment that will run the policy
   val environment = new CliffWalkingEnvironment()
 
@@ -38,7 +40,7 @@ object Test extends App{
     if(!visitedStates.contains(currentState)) {
       visitedStates += currentState
       // Select the action given the current state and the possible actions
-      val action = policy.selectAction(currentState, environment.possibleActions)._2
+      val action = policy.selectAction(currentState, environment.possibleActions)
       // Accumulate the observed reward
       reward += environment.execute(action)
       // Draw the board

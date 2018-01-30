@@ -1,11 +1,9 @@
 package org.sarsamora.value_functions
 
 import breeze.linalg.DenseVector
-import breeze.stats.distributions.Uniform
 import org.json4s.JsonAST.JObject
 import org.json4s.JsonDSL._
 import org.sarsamora.actions.Action
-import org.sarsamora.randGen
 import org.sarsamora.states.State
 
 import scala.collection.mutable
@@ -18,23 +16,13 @@ class LinearApproximationActionValues(coefficients:Map[Action, collection.Map[St
 
   val featureNames:Seq[String] = coefficients.head._2.keySet.toSeq.sorted
   val reverseIndices:Map[Int, String] = featureNames.zipWithIndex.map{ case(f, ix) => ix -> f}.toMap// ++ Map(0 -> "bias")
-  val coefficientArrays:mutable.HashMap[Action, mutable.ArrayBuffer[Double]] = new  mutable.HashMap[Action, mutable.ArrayBuffer[Double]]()
+  val coefficientArrays:mutable.HashMap[Action, Array[Double]] = new  mutable.HashMap[Action, Array[Double]]()
 
    coefficientArrays ++= coefficients.map{
     case(k, v) =>
       val buff = new mutable.ArrayBuffer[Double]()
       featureNames map v foreach (i => buff += i)
-      k -> buff
-  }
-
-  def this(actions:Set[Action], features:Set[String]) = {
-    this(actions.map{
-      a =>
-        val uniformDist = Uniform(-1, 1)(randGen)
-        val map = new mutable.HashMap[String, Double]()
-        (features + "bias").map(f => f -> uniformDist.sample()).foreach(x => map += x)
-        a -> map
-    }.toMap)
+      k -> buff.toArray
   }
 
   protected def valuesToArray(values:Map[String, Double]):DenseVector[Double] = {
@@ -62,14 +50,14 @@ class LinearApproximationActionValues(coefficients:Map[Action, collection.Map[St
     val features = valuesToArray(key._1.toFeatures)
 
     // Perform the inner product
-    DenseVector(actionCoefficients.toArray).t * features
+    DenseVector(actionCoefficients).t * features
   }
 
   override def toJson: JObject = {
     val maps = (Map()++ coefficientArrays).map {
       case (k, v) =>
 
-        val values = v.toArray.zipWithIndex.map {
+        val values = v.zipWithIndex.map {
           case (x, ix) =>
             reverseIndices(ix) -> x
         }.toMap
