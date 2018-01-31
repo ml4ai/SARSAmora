@@ -12,7 +12,7 @@ import org.sarsamora.{convergenceTolerance, value_functions}
 class TabularActionValues(val tolerance:Double = convergenceTolerance) extends value_functions.TabularActionValues
   with TDUpdate {
 
-  // TODO: Implement elegibility traces
+  // TODO: Implement eligibility traces
 
   /**
     * Bellman update for the tabular q-function

@@ -14,17 +14,26 @@ import scala.collection.mutable
   */
 class LinearApproximationActionValues(coefficients:Map[Action, collection.Map[String, Double]]) extends ActionValues{
 
+  // Feature vocabulary sorted lexicographically
   val featureNames:Seq[String] = coefficients.head._2.keySet.toSeq.sorted
-  val reverseIndices:Map[Int, String] = featureNames.zipWithIndex.map{ case(f, ix) => ix -> f}.toMap// ++ Map(0 -> "bias")
-  val coefficientArrays:mutable.HashMap[Action, Array[Double]] = new  mutable.HashMap[Action, Array[Double]]()
+  // Inverted index of the feature vocabulary
+  val reverseIndices:Map[Int, String] = featureNames.zipWithIndex.map{ case(f, ix) => ix -> f}.toMap
+  // Backend of the feature coefficients
+  val coefficientArrays:mutable.HashMap[Action, Array[Double]] = new mutable.HashMap[Action, Array[Double]]()
 
-   coefficientArrays ++= coefficients.map{
+  // Convert the coefficients into arrays for optimization
+  coefficientArrays ++= coefficients.map{
     case(k, v) =>
       val buff = new mutable.ArrayBuffer[Double]()
       featureNames map v foreach (i => buff += i)
       k -> buff.toArray
   }
 
+  /**
+    * Converts a feature dictionary into a breeze vector with a bias term for learning
+    * @param values Feature dictionary created by State.toFeatures
+    * @return DenseVector index with the feature values correctly indexed
+    */
   protected def valuesToArray(values:Map[String, Double]):DenseVector[Double] = {
     val v:Seq[Double] = featureNames.indices map {
       ix =>
@@ -41,8 +50,14 @@ class LinearApproximationActionValues(coefficients:Map[Action, collection.Map[St
     new DenseVector[Double](v.toArray)
   }
 
+  /**
+    * Computes the linear approximation of the Action-Value function for the state-action pair
+    * @param key State-Action pair to be evaluated
+    * @return The value of the input pair
+    */
   override def apply(key:(State, Action)): Double = {
 
+    // Fetch the correct coefficients
     val action = key._2
     val actionCoefficients = coefficientArrays(action)
 
@@ -53,8 +68,12 @@ class LinearApproximationActionValues(coefficients:Map[Action, collection.Map[St
     DenseVector(actionCoefficients).t * features
   }
 
+  /**
+    * Serialize the coefficients to a Json AST
+    * @return JObject to be serialized
+    */
   override def toJson: JObject = {
-    val maps = (Map()++ coefficientArrays).map {
+    val maps = (Map() ++ coefficientArrays).map {
       case (k, v) =>
 
         val values = v.zipWithIndex.map {
@@ -70,8 +89,7 @@ class LinearApproximationActionValues(coefficients:Map[Action, collection.Map[St
 
     }
 
-
-
+    // Build the JObject with the appropriate structure
     ("type" -> "linear") ~
       ("coefficients" -> maps)
   }

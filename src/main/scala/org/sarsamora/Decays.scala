@@ -1,11 +1,23 @@
 package org.sarsamora
 
 /**
+  * Implements decay iterators to adjust the learning rate, epsilon parameter, lambda parameter, etc. for the learning
+  * algorithms.
+  *
   * Created by enrique on 21/04/17.
   */
 object Decays {
 
-  def genericDecay(decreaseFunction:(Double, Int) => Iterable[Double], initial:Double, lowerBound:Double, steps:Int, delay:Int) = {
+  /**
+    * Base logic to generate a decay iterator
+    * @param decreaseFunction Specializes the decay to fall with a range described by this function
+    * @param initial Starting value of the decay
+    * @param lowerBound Finishing value of the decay
+    * @param steps Number of steps of the decay iterable
+    * @param delay Number of times the initial value is returned before starting the decay
+    * @return Iterable object that yields the decaying parameter value each state
+    */
+  def genericDecay(decreaseFunction:(Double, Int) => Iterable[Double], initial:Double, lowerBound:Double, steps:Int, delay:Int): Stream[Double] = {
     assert (initial > lowerBound, "The initial value should be larger than the lower bound")
     assert(delay < steps, "Delay should be less than the number of steps")
 
@@ -30,9 +42,9 @@ object Decays {
 
   def constantDecrease(quantity:Double, steps:Int):Iterable[Double] = Stream.fill(steps)(quantity/steps)
 
-  def constantDecay(initial:Double, lowerBound:Double, steps:Int, delay:Int) = genericDecay(constantDecrease, initial, lowerBound, steps, delay)
+  def constantDecay(initial:Double, lowerBound:Double, steps:Int, delay:Int): Stream[Double] = genericDecay(constantDecrease, initial, lowerBound, steps, delay)
 
-  def linearDecay(upperBound:Double, lowerBound:Double, steps:Int, delay:Int) = {
+  def linearDecay(upperBound:Double, lowerBound:Double, steps:Int, delay:Int): Stream[Double] = {
     assert (upperBound > lowerBound, "The initial value should be larger than the lower bound")
     assert(delay < steps, "Delay should be less than the number of steps")
 
@@ -60,7 +72,7 @@ object Decays {
     delayStream ++ decreaseStream ++ tailStream
   }
 
-  def exponentialDecay(upperBound:Double, lowerBound:Double, steps:Int, delay:Int) = {
+  def exponentialDecay(upperBound:Double, lowerBound:Double, steps:Int, delay:Int): Stream[Double] = {
     assert (upperBound > lowerBound, "The initial value should be larger than the lower bound")
     assert(delay < steps, "Delay should be less than the number of steps")
 
