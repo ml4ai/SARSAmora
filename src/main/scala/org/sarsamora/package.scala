@@ -14,5 +14,5 @@ import scala.util.Random
 package object sarsamora {
   val randGen: RandBasis = RandBasis.mt0
   val scalaRand = new Random(0)
-  val convergenceTolerance = 1e-4
+  val convergenceTolerance = 1e-3
 }

@@ -5,32 +5,33 @@ import org.json4s.JsonAST.JObject
 import org.json4s.JsonDSL._
 import org.sarsamora.actions.Action
 import org.sarsamora.randGen
-import org.sarsamora.states.State
+import org.sarsamora.states.{State, StateParser}
 
 import scala.collection.mutable
 
 class TabularActionValues(epsilon:Double = 1e-2) extends ActionValues {
-  var backEnd = new mutable.HashMap[(String, Action), Double]
+  var backEnd = new mutable.HashMap[(State, Action), Double]
   val uniformDist: Uniform = Uniform(-epsilon, epsilon)(randGen)
 
-  def this(loadedBackend:collection.Map[Action, collection.Map[String, Double]]) = {
+  def this(loadedBackend:collection.Map[Action, collection.Map[String, Double]], parser:StateParser) = {
     this()
     this.backEnd ++= loadedBackend.flatMap{
       case (a, m) =>
         m.map{
           case(s, v) =>
-            (s, a) -> v
+            val state:State = parser.fromString(s)
+            (state, a) -> v
         }
     }
   }
 
   override def apply(key:(State, Action)): Double = {
-    val newKey = (key._1.toString, key._2)
-    if(backEnd.contains(newKey))
-      backEnd(newKey)
+    //val newKey = (key._1.toString, key._2)
+    if(backEnd.contains(key))
+      backEnd(key)
     else{
       val v = uniformDist.sample()
-      backEnd += (newKey -> v)
+      backEnd += (key -> v)
       v
     }
   }
@@ -42,7 +43,7 @@ class TabularActionValues(epsilon:Double = 1e-2) extends ActionValues {
       case (action, m) =>
         // Map[Action, Option[Map[String, Double]]
         action.toString -> Some(m.map{
-          case ((state, _), v) => state -> v
+          case ((state, _), v) => state.toString -> v
         }.toMap)
     }
 
@@ -50,7 +51,7 @@ class TabularActionValues(epsilon:Double = 1e-2) extends ActionValues {
       ("coefficients" -> x)
   }
 
-  def toStateValues:Map[String, Double] = {
+  def toStateValues:Map[State, Double] = {
     this.backEnd.groupBy{
       case((s, a), v) => s
     }.mapValues{

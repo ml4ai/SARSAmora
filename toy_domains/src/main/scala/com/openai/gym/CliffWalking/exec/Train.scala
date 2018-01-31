@@ -3,12 +3,13 @@ package com.openai.gym.CliffWalking.exec
 import java.io._
 
 import com.openai.gym.CliffWalking._
+import com.openai.gym.observation_spaces.Discrete
 import org.sarsamora.Decays
 import org.sarsamora.actions.Action
 import org.sarsamora.policies.EpGreedyPolicy
+import org.sarsamora.policy_iteration.td.QLearning
+import org.sarsamora.policy_iteration.td.value_functions.LinearApproximationActionValues
 //import org.sarsamora.policy_iteration.mc.value_functions.TabularActionValues
-import org.sarsamora.policy_iteration.td.SARSA
-import org.sarsamora.policy_iteration.td.value_functions.TabularActionValues
 import org.sarsamora.policy_iteration.{EpisodeObservation, EpisodeObserver, IterationObservation}
 
 import scala.collection.mutable
@@ -16,9 +17,9 @@ import scala.collection.mutable
 
 object Train extends App{
   // Hyper parameters
-  val numEpisodes = 30000
+  val numEpisodes = 5000
   val burnInEpisodes = 0
-  val learningRate = 0.3
+  val learningRate = 0.1
   val decay =   1.0
   val lambda = 1.0
   ///////////////////
@@ -29,21 +30,21 @@ object Train extends App{
   ////////////////////////////
 
   // Value function type: Tabular, linear approximation, etc.
-  //val qFunction = new LinearApproximationActionValues(activeActions, new Discrete(0, environment.cardinality).toFeatures.keySet)
-  val qFunction = new TabularActionValues()
+  val qFunction = new LinearApproximationActionValues(activeActions, new Discrete(0, environment.cardinality).toFeatures.keySet)
+  //val qFunction = new TabularActionValues()
 
   // Exploration parameter for epsilon-greedy policies
   val epsilon = 0.1
   val epsilons = Decays.linearDecay(epsilon, 0.000, numEpisodes, 0).iterator
 
   // Epsilon greedy policy to iterate, takes as parameters the explorations and the value function instance
-  val initialPolicy = new EpGreedyPolicy(epsilons, qFunction)
+  val initialPolicy = new EpGreedyPolicy(epsilon, qFunction)
   /////////////////
 
 
   // Learning algorithm
   val alphas = Decays.exponentialDecay(learningRate, 0.001, numEpisodes, 0).iterator
-  val policyIteration = new SARSA(
+  val policyIteration = new QLearning(
     // Anonymous episode fabric. Each time an episode finished, this is called to return a fresn environment
     // to start the next episode
     () => {

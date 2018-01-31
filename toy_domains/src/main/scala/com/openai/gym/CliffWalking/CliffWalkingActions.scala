@@ -1,8 +1,10 @@
 package com.openai.gym.CliffWalking
 
+import com.openai.gym.observation_spaces.Discrete
 import org.json4s.DefaultFormats
 import org.json4s.JsonAST.{JObject, JValue}
 import org.sarsamora.actions.Action
+import org.sarsamora.states.StateParser
 import org.sarsamora.value_functions.ActionValueLoader
 
 import scala.collection.mutable
@@ -15,7 +17,7 @@ case class Left() extends CliffWalkingAction(3)
 case class Right() extends CliffWalkingAction(1)
 
 
-class CliffWalkingActionsActionValues extends ActionValueLoader {
+class CliffWalkingActionsActionValues extends ActionValueLoader{
   implicit lazy val formats: DefaultFormats.type = DefaultFormats
 
 
@@ -49,4 +51,6 @@ class CliffWalkingActionsActionValues extends ActionValueLoader {
 
     coefficientsMap
   }
+
+  override val stateParser:StateParser = Discrete
 }

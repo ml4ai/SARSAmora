@@ -38,10 +38,10 @@ class TabularActionValues extends value_functions.TabularActionValues with MCUpd
       if(!firstVisit || (firstVisit && !visited.contains((state, action)))){
         val memory = returnMemory.getOrElse((state, action), new mutable.ListBuffer[Double])
         memory += returns(ix)
-        val prevVal = backEnd((state.toString, action))
+        val prevVal = backEnd((state, action))
         val newVal = memory.sum / memory.size
         if(Math.abs(newVal - prevVal) > tolerance){
-          backEnd((state.toString, action)) = newVal
+          backEnd((state, action)) = newVal
           changed = true
         }
       }

@@ -9,6 +9,7 @@ trait State {
   def toFeatures:Map[String, Double]
 }
 
-case class DummyState() extends State{
-  override def toFeatures: Map[String, Double] = Map()
+trait StateParser {
+  def fromString(description:String):State
 }
+

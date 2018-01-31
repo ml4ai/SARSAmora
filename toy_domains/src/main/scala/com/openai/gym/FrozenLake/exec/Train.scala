@@ -5,7 +5,7 @@ import com.openai.gym.observation_spaces.Discrete
 import org.sarsamora.Decays
 import org.sarsamora.actions.Action
 import org.sarsamora.policies.EpGreedyPolicy
-import org.sarsamora.policy_iteration.td.SARSA
+import org.sarsamora.policy_iteration.td.QLearning
 import org.sarsamora.policy_iteration.td.value_functions.LinearApproximationActionValues
 import org.sarsamora.policy_iteration.{EpisodeObservation, EpisodeObserver, IterationObservation}
 //import org.sarsamora.policy_iteration.mc.value_functions.TabularActionValues
@@ -16,10 +16,10 @@ import org.sarsamora.policy_iteration.{EpisodeObservation, EpisodeObserver, Iter
 object Train extends App{
 
   // Hyper parameters
-  val numEpisodes = 1000
-  val burnInEpisodes = 10
-  val learningRate = 1d
-  val decay = 1d
+  val numEpisodes = 10000
+  val burnInEpisodes = 0
+  val learningRate = 0.1
+  val decay = 0.2d
   val lambda = 1
   ///////////////////
 
@@ -33,7 +33,7 @@ object Train extends App{
   //val qFunction = new TabularActionValues()
 
   // Exploration parameter for epsilon-greedy policies
-  val epsilon = 0.3
+  val epsilon = 0.1
   val epsilons = Decays.exponentialDecay(epsilon, 0.00, numEpisodes, 0).iterator
   // Epsilon greedy policy to iterate, takes as parameters the explorations and the value function instance
   val initialPolicy = new EpGreedyPolicy(epsilon, qFunction)
@@ -42,14 +42,14 @@ object Train extends App{
   val alphas = Decays.exponentialDecay(learningRate, 0d, numEpisodes, 0).iterator
 
   // Learning algorithm
-  val policyIteration = new SARSA(
+  val policyIteration = new QLearning(
     // Anonymous episode fabric. Each time an episode finished, this is called to return a fresn environment
     // to start the next episode
     () => {
       environment.reset()
       Some(environment)
     }
-    , numEpisodes, burnInEpisodes, alphas, decay, lambda)
+    , numEpisodes, burnInEpisodes, learningRate, decay, lambda)
 
 //  val policyIteration = new MonteCarlo(
 //    // Anonymous episode fabric. Each time an episode finished, this is called to return a fresn environment

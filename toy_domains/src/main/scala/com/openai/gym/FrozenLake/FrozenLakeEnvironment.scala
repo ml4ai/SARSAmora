@@ -97,7 +97,7 @@ class FrozenLakeEnvironment(val map_name:String, val slippery:Boolean) extends J
     * Whether the episode has finished
     * @return
     */
-  override def finishedEpisode:Boolean = done || iterationCounter > 100
+  override def finishedEpisode:Boolean = done //|| iterationCounter > 100
 
   /**
     * Describes the environment configuration on a string
