@@ -23,7 +23,7 @@ import org.sarsamora.value_functions.ActionValues
 class QLearning(environmentFabric:() => Option[Environment], episodeBound:Int,
                 burnInEpisodes:Int, alphas:Iterator[Double],
                 gamma:Double = 0.8, lambda:Double = 1.0)
-  extends TemporalDifferenceLearning(environmentFabric, episodeBound,
+  extends OnlineTD(environmentFabric, episodeBound,
     burnInEpisodes, alphas, gamma, lambda) {
 
   def this(environmentFabric: () => Option[Environment], episodeBound: Int, burnInEpisodes: Int, alpha: Double, gamma: Double, lambda: Double) {

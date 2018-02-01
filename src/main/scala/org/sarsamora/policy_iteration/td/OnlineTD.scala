@@ -22,10 +22,10 @@ import org.sarsamora.value_functions.ActionValues
   * @param alphas Learning rate stream
   * @param gamma Discount factor
   */
-abstract class TemporalDifferenceLearning(environmentFabric:() => Option[Environment],
-                                          episodeBound:Int, burnInEpisodes:Int,
-                                          alphas:Iterator[Double],
-                                          gamma:Double = 0.8, lambda:Double = 1.0) extends LazyLogging {
+abstract class OnlineTD(environmentFabric:() => Option[Environment],
+                        episodeBound:Int, burnInEpisodes:Int,
+                        alphas:Iterator[Double],
+                        gamma:Double = 0.8, lambda:Double = 1.0) extends LazyLogging {
 
   // Stability flag controlling convergence
   var stable = true
@@ -35,7 +35,7 @@ abstract class TemporalDifferenceLearning(environmentFabric:() => Option[Environ
 
   /**
     * Selects the next action according to a criteria. For SARSA, use the iterated policy, for QLearning use the greedy
-    * choice given the action values
+    * choice given the action values.
     *
     * @param nextState State to condition the actions
     * @param possibleActions Set of actions to chose from

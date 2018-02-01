@@ -86,6 +86,7 @@ object Decays {
     val tailStream = Stream.continually(lowerBound)
 
     val x0 = math.log(1) - math.log(upperBound)
+    // TODO: Fix the special case when the lower bound is 0.0
     val x1 = math.log(1) - math.log(lowerBound)
 
     val quantity = x1 - x0

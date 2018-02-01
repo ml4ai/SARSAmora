@@ -21,6 +21,7 @@ class LinearApproximationActionValues(coefficients:Map[Action, collection.Map[St
   // Backend of the feature coefficients
   val coefficientArrays:mutable.HashMap[Action, Array[Double]] = new mutable.HashMap[Action, Array[Double]]()
 
+
   // Convert the coefficients into arrays for optimization
   coefficientArrays ++= coefficients.map{
     case(k, v) =>
@@ -29,25 +30,40 @@ class LinearApproximationActionValues(coefficients:Map[Action, collection.Map[St
       k -> buff.toArray
   }
 
+  // Actions sorted lexicographically
+  val sortedActions = this.coefficientArrays.keys.toSeq.sortBy(_.toString)
+
+  // TODO: Explain the expanded parameter
   /**
     * Converts a feature dictionary into a breeze vector with a bias term for learning
     * @param values Feature dictionary created by State.toFeatures
+    * @param expanded
     * @return DenseVector index with the feature values correctly indexed
     */
-  protected def valuesToArray(values:Map[String, Double]):DenseVector[Double] = {
-    val v:Seq[Double] = featureNames.indices map {
-      ix =>
-        if(reverseIndices(ix) == "bias"){
-          // Bias term
-          1.0
-        }
-        else{
-          val featureName = reverseIndices(ix)
-          values(featureName)
-        }
-    }
+   def valuesToArray(values:Map[String, Double], action:Option[Action] = None):DenseVector[Double] = {
 
-    new DenseVector[Double](v.toArray)
+     val size = if(action.isDefined) featureNames.size * sortedActions.size else featureNames.size
+
+     val backend:Array[Double] = Array.fill(size)(0)
+
+     featureNames.indices foreach {
+       ix => {
+         val offset = if (action.isDefined) sortedActions.indexOf(action.get) else 0
+
+         val v = if (reverseIndices(ix) == "bias") {
+           // Bias term
+           1.0
+         }
+         else {
+           val featureName = reverseIndices(ix)
+           values(featureName)
+         }
+
+         backend(offset+ix) = v
+       }
+     }
+
+     new DenseVector[Double](backend)
   }
 
   /**

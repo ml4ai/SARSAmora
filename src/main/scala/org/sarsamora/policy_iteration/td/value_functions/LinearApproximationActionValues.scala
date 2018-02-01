@@ -1,10 +1,15 @@
 package org.sarsamora.policy_iteration.td.value_functions
 
-import breeze.linalg.DenseVector
+import java.util.Arrays
+
+import breeze.linalg.{DenseMatrix, DenseVector}
 import breeze.stats.distributions.Uniform
 import org.sarsamora.actions.Action
 import org.sarsamora.states.State
 import org.sarsamora.{convergenceTolerance, randGen, value_functions}
+import breeze.stats.regression.{LeastSquaresRegressionResult}
+import org.netlib.util.intW
+import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
 
 import scala.collection.mutable
 
@@ -35,6 +40,7 @@ class LinearApproximationActionValues(coefficients:Map[Action, mutable.HashMap[S
 
   /**
     * Performs the Bellman's update with gradient descent
+    *
     * @param current Current state and value
     * @param next Next state and value
     * @param reward Observed reward
@@ -46,41 +52,6 @@ class LinearApproximationActionValues(coefficients:Map[Action, mutable.HashMap[S
   override def tdUpdate(current:(State, Action), next:(State, Action),
                         reward: Double, rate: Double,
                         decay: Double, lambda: Double): Boolean = {
-
-//    val currentAction = current._2
-//    val currentState = current._1
-//
-//    val actionCoefficients = DenseVector(coefficientArrays(currentAction).toArray)
-//
-//    // The gradient are the feature values because this is a linear function optimizing MSE
-//    val gradient = valuesToArray(currentState.toFeatures)
-//
-//    val currentVal = this(current)
-//    val nextVal = this(next)
-//
-//    val delta = rate*(reward + decay*nextVal - currentVal)
-//    eligibilityTraces = (decay*lambda*DenseVector(eligibilityTraces) + gradient).toArray
-//
-//
-//    var change = false
-//
-//
-//    val oldActionCoefficients = actionCoefficients
-//    val newActionCoefficients= oldActionCoefficients + delta*DenseVector(eligibilityTraces)
-//
-//    coefficientArrays.update(currentAction, new mutable.ArrayBuffer[Double] ++ newActionCoefficients.toArray)
-//
-//    val d = newActionCoefficients - oldActionCoefficients
-//    val norm = Math.sqrt(d.t * d)
-//    if(norm > tolerance)
-//      change = true
-//
-//    change
-
-    // Update the eligibility traces
-//    for(i <- eligibilityTraces.indices){
-//      eligibilityTraces(i)  = decay*lambda*eligibilityTraces(i)
-//    }
 
     var change = false
 
@@ -105,5 +76,52 @@ class LinearApproximationActionValues(coefficients:Map[Action, mutable.HashMap[S
       change = true
 
     change
+  }
+
+  def lsUpdate(phi:DenseMatrix[Double], pPhi:DenseMatrix[Double], rewards:DenseVector[Double], gamma:Double):Boolean = {
+
+    // Build the matrices to do a least-squares approximation of the solution to Aw = b
+    val A = phi.t * (phi - gamma*pPhi)
+    val b = phi.t * rewards
+
+    val lsResult = doLeastSquares(A, b)
+
+    // This updates all the actions' coefficients
+    val coefficients = lsResult.coefficients
+
+    // See if the solution changed
+    val oldCoefficients = new DenseVector[Double](sortedActions.flatMap(k => coefficientArrays(k)).toArray)
+    val difference = coefficients - oldCoefficients
+    val changed = if(difference.t * difference  > convergenceTolerance) true else false
+
+    // Unroll the coefficients into their arrays
+    val stride = coefficientArrays.head._2.size
+    for((action, ix) <- sortedActions.zipWithIndex){
+      val offset = ix*stride
+      val slice = coefficients.toArray.slice(offset, offset+stride)
+      coefficientArrays(action) = slice
+    }
+
+    changed
+  }
+
+  def doLeastSquares(data: DenseMatrix[Double], outputs: DenseVector[Double]): LeastSquaresRegressionResult = {
+    val workArray = new Array[Double](2*data.rows*data.cols)
+    require(data.rows == outputs.size)
+    //require(data.rows > data.cols+1)
+    require(workArray.length >= 2*data.rows*data.cols)
+
+    val info = new intW(0)
+    lapack.dgels("N", data.rows, data.cols, 1, data.data, data.rows, outputs.data, data.rows, workArray, workArray.length, info)
+    if (info.`val` < 0) {
+      throw new ArithmeticException("Least squares did not converge.")
+    }
+
+    val coefficients = new DenseVector[Double](Arrays.copyOf(outputs.data, data.cols))
+    var r2 = 0.0
+    for (i <- 0 until (data.rows - data.cols)) {
+      r2 = r2 + math.pow(outputs.data(data.cols+i), 2)
+    }
+    LeastSquaresRegressionResult(coefficients, r2)
   }
 }
