@@ -35,12 +35,9 @@ class TabularActionValues(val tolerance:Double = convergenceTolerance) extends v
     val newValue:Double = value + (rate*(reward + decay*this(next) - value))
 
     // Store the update in the memory back-end
-    backEnd((current._1, current._2)) =  newValue
+    backEnd(current) =  newValue
 
     // Return whether the current changed above the requested tolerance
-    if(Math.abs(newValue - value) > tolerance)
-      true
-    else
-      false
+    Math.abs(newValue - value) > tolerance
   }
 }

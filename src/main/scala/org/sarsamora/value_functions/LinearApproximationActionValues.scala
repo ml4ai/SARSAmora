@@ -31,13 +31,12 @@ class LinearApproximationActionValues(coefficients:Map[Action, collection.Map[St
   }
 
   // Actions sorted lexicographically
-  val sortedActions = this.coefficientArrays.keys.toSeq.sortBy(_.toString)
+  protected val sortedActions = this.coefficientArrays.keys.toSeq.sortBy(_.toString)
 
   // TODO: Explain the expanded parameter
   /**
     * Converts a feature dictionary into a breeze vector with a bias term for learning
     * @param values Feature dictionary created by State.toFeatures
-    * @param expanded
     * @return DenseVector index with the feature values correctly indexed
     */
    def valuesToArray(values:Map[String, Double], action:Option[Action] = None):DenseVector[Double] = {

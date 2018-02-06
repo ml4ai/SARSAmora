@@ -30,7 +30,7 @@ trait EpisodeObserver {
   * @param alpha Learning rate
   * @param gamma Discount factor
   * @param currentState Sarsa
-  * @param currentAction aArsa
+  * @param currentAction sArsa
   * @param reward saRsa
   * @param nextState sarSa
   * @param nextAction sarsA

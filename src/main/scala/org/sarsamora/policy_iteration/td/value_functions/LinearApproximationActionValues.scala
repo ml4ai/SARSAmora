@@ -2,14 +2,14 @@ package org.sarsamora.policy_iteration.td.value_functions
 
 import java.util.Arrays
 
-import breeze.linalg.{DenseMatrix, DenseVector}
+import breeze.linalg.{DenseMatrix, DenseVector, inv, pinv, rank}
 import breeze.stats.distributions.Uniform
 import org.sarsamora.actions.Action
 import org.sarsamora.states.State
 import org.sarsamora.{convergenceTolerance, randGen, value_functions}
-import breeze.stats.regression.{LeastSquaresRegressionResult}
+import breeze.stats.regression.LeastSquaresRegressionResult
 import org.netlib.util.intW
-import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
+import com.github.fommil.netlib.LAPACK.{getInstance => lapack}
 
 import scala.collection.mutable
 
@@ -78,24 +78,33 @@ class LinearApproximationActionValues(coefficients:Map[Action, mutable.HashMap[S
     change
   }
 
+
   def lsUpdate(phi:DenseMatrix[Double], pPhi:DenseMatrix[Double], rewards:DenseVector[Double], gamma:Double):Boolean = {
 
     // Build the matrices to do a least-squares approximation of the solution to Aw = b
     val A = phi.t * (phi - gamma*pPhi)
     val b = phi.t * rewards
 
-    val lsResult = doLeastSquares(A, b)
+
+
+    //val lsResult = doLeastSquares(A, b)
 
     // This updates all the actions' coefficients
-    val coefficients = lsResult.coefficients
+//    val coefficients = lsResult.coefficients
+//    val r = rank(A)
+    val mpinv = A\b
+    val coefficients = mpinv //inv(A.t*A)*A.t*b
+
 
     // See if the solution changed
     val oldCoefficients = new DenseVector[Double](sortedActions.flatMap(k => coefficientArrays(k)).toArray)
-    val difference = coefficients - oldCoefficients
-    val changed = if(difference.t * difference  > convergenceTolerance) true else false
+    val difference = oldCoefficients - coefficients
+    val norm = Math.sqrt(difference.t * difference)
+    println(s"Norm: $norm")
+    val changed = if(norm  > convergenceTolerance) true else false
 
     // Unroll the coefficients into their arrays
-    val stride = coefficientArrays.head._2.size
+    val stride = coefficientArrays.head._2.length
     for((action, ix) <- sortedActions.zipWithIndex){
       val offset = ix*stride
       val slice = coefficients.toArray.slice(offset, offset+stride)
@@ -105,6 +114,7 @@ class LinearApproximationActionValues(coefficients:Map[Action, mutable.HashMap[S
     changed
   }
 
+  // TODO: Put on a better place
   def doLeastSquares(data: DenseMatrix[Double], outputs: DenseVector[Double]): LeastSquaresRegressionResult = {
     val workArray = new Array[Double](2*data.rows*data.cols)
     require(data.rows == outputs.size)

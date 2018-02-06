@@ -128,7 +128,7 @@ class MonteCarlo(environmentFabric:() => Option[Environment], episodeBound:Int, 
     if(stable)
       logger.info(s"Converged on $episodeCount episodes")
     else
-      logger.info(s"Didn't converge")
+      logger.info("Didn't converge")
 
     // Return the tuned policy and the convergence status
     (policy, stable)
