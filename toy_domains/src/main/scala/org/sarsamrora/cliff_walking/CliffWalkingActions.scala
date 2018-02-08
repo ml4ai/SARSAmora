@@ -1,4 +1,4 @@
-package com.openai.gym.CliffWalking
+package org.sarsamrora.cliff_walking
 
 import com.openai.gym.observation_spaces.Discrete
 import org.json4s.DefaultFormats
@@ -11,10 +11,18 @@ import scala.collection.mutable
 
 abstract class CliffWalkingAction(val id:Int) extends Action
 
-case class Up() extends CliffWalkingAction(0)
-case class Down() extends CliffWalkingAction(2)
-case class Left() extends CliffWalkingAction(3)
-case class Right() extends CliffWalkingAction(1)
+object Up extends CliffWalkingAction(0){
+  override def toString: String = "Up"
+}
+object Down extends CliffWalkingAction(2){
+  override def toString: String = "Down"
+}
+object Left extends CliffWalkingAction(3){
+  override def toString: String = "Left"
+}
+object Right extends CliffWalkingAction(1){
+  override def toString: String = "Right"
+}
 
 
 class CliffWalkingActionsActionValues extends ActionValueLoader{
@@ -40,10 +48,10 @@ class CliffWalkingActionsActionValues extends ActionValueLoader{
   override def loadActionValues(ast:JObject): Map[Action, collection.Map[String, Double]] = {
 
     val coefficients = ast \ "coefficients"
-    val up = extractCoefficients(coefficients, Up())
-    val down= extractCoefficients(coefficients, Down())
-    val left = extractCoefficients(coefficients, Left())
-    val right = extractCoefficients(coefficients, Right())
+    val up = extractCoefficients(coefficients, Up)
+    val down= extractCoefficients(coefficients, Down)
+    val left = extractCoefficients(coefficients, Left)
+    val right = extractCoefficients(coefficients, Right)
 
     val coefficientsMap = Seq[Option[(Action, mutable.HashMap[String, Double])]](up, down, left, right).collect{
       case Some((name, coeff)) => name -> coeff
@@ -52,5 +60,5 @@ class CliffWalkingActionsActionValues extends ActionValueLoader{
     coefficientsMap
   }
 
-  override val stateParser:StateParser = Discrete
+  override val stateParser:StateParser = CliffWalkingState
 }

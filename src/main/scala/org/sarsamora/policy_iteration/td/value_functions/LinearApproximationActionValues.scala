@@ -2,7 +2,7 @@ package org.sarsamora.policy_iteration.td.value_functions
 
 import java.util.Arrays
 
-import breeze.linalg.{DenseMatrix, DenseVector, inv, pinv, rank}
+import breeze.linalg.{DenseMatrix, DenseVector, diag, inv, pinv, rank}
 import breeze.stats.distributions.Uniform
 import org.sarsamora.actions.Action
 import org.sarsamora.states.State
@@ -21,14 +21,13 @@ class LinearApproximationActionValues(coefficients:Map[Action, mutable.HashMap[S
   extends value_functions.LinearApproximationActionValues(coefficients)
   with TDUpdate {
 
-  def this(actions:Set[Action], features:Set[String]){
+  def this(actions:Set[Action], features:Set[String], addBias:Boolean){
     this(actions.map{
       a =>
         val uniformDist = Uniform(-1, 1)(randGen)
         val map = new mutable.HashMap[String, Double]()
-        // TODO Figure out if the bias affects
-        (features + "bias").map(f => f -> uniformDist.sample()).foreach(x => map += x)
-        features.map(f => f -> uniformDist.sample()).foreach(x => map += x)
+        val variables = if(addBias) features + "bias" else features
+        variables.map(f => f -> uniformDist.sample()).foreach(x => map += x)
         a -> map
     }.toMap)
   }
@@ -79,6 +78,50 @@ class LinearApproximationActionValues(coefficients:Map[Action, mutable.HashMap[S
   }
 
 
+  def lsUpdate2(batch:Iterable[(State, Action, Double, State, Set[Action])], gamma:Double, k:Int) = {
+    val sig = Array.fill(k)(0.001d)
+    val B = diag(DenseVector(sig))
+    val b = DenseVector.zeros[Double](k)
+
+    for(sample <- batch){
+      val (s,a,r,ns,pa) = sample
+      val f = valuesToArray(s.toFeatures, Some(a))
+
+      val greedyAction = pa.map(na => (na, apply(ns, na))).toSeq.sortBy(_._2).reverse.head._1
+      val nf = valuesToArray(ns.toFeatures, Some(greedyAction))
+
+      val diff = (f-gamma*nf).t
+      val M = f*diff
+
+      val numerator = B*M*B
+      val denominator = 1 + diff*B*f
+
+      B :-= (numerator/denominator)
+      b :+= f*r
+
+    }
+
+    val coefficients = B*b
+
+    // See if the solution changed
+    val oldCoefficients = new DenseVector[Double](sortedActions.flatMap(k => coefficientArrays(k)).toArray)
+    val difference = oldCoefficients - coefficients
+    val norm = Math.sqrt(difference.t * difference)
+    println(s"Norm: $norm")
+    val changed = if(norm  > convergenceTolerance) true else false
+
+    // Unroll the coefficients into their arrays
+    val stride = coefficientArrays.head._2.length
+    for((action, ix) <- sortedActions.zipWithIndex){
+      val offset = ix*stride
+      val slice = coefficients.toArray.slice(offset, offset+stride)
+      coefficientArrays(action) = slice
+    }
+
+    changed
+  }
+
+
   def lsUpdate(phi:DenseMatrix[Double], pPhi:DenseMatrix[Double], rewards:DenseVector[Double], gamma:Double):Boolean = {
 
     // Build the matrices to do a least-squares approximation of the solution to Aw = b
@@ -92,7 +135,7 @@ class LinearApproximationActionValues(coefficients:Map[Action, mutable.HashMap[S
     // This updates all the actions' coefficients
 //    val coefficients = lsResult.coefficients
 //    val r = rank(A)
-    val mpinv = A\b
+    val mpinv = pinv(A)*b
     val coefficients = mpinv //inv(A.t*A)*A.t*b
 
 

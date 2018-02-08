@@ -80,9 +80,14 @@ abstract class OnlineTD(environmentFabric:() => Option[Environment],
           var currentAction = policy.selectAction(currentState, environment.possibleActions)
 
 
+          var finished = false
 
           // Enter into the episode loop
-          while(!environment.finishedEpisode){
+          while(!finished){
+
+            if(environment.finishedEpisode)
+              finished = true
+
             // Execute chosen action and observe reward
             val reward = environment.execute(currentAction)
 

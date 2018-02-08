@@ -102,14 +102,7 @@ class LSPI(environmentFabric:() => Option[Environment],
     * @param episodeObserver Optional callback function receiving information each iteration
     * @return Learnt policy and convergence status
     */
-  def iteratePolicy(policy:EpGreedyPolicy, episodeObserver:Option[EpisodeObserver] = None):(Policy, Boolean)= {
-
-    // Linear algebra data for stirring and mixing and magic
-//    var phi = DenseMatrix.zeros[Double](batchSize, featureNumber*actionNumber)
-//    var pPhi = DenseMatrix.zeros[Double](batchSize, featureNumber*actionNumber)
-//    var rewards = DenseVector.zeros[Double](batchSize)
-
-
+  def iteratePolicy(policy:EpGreedyPolicy, trainingData:Option[Iterable[(State, Action, Double, State, Set[Action])]] = None, episodeObserver:Option[EpisodeObserver] = None):(Policy, Boolean)= {
 
 
     val values = policy.values match {
@@ -118,24 +111,25 @@ class LSPI(environmentFabric:() => Option[Environment],
     }
 
     // Observe the training samples
-    val batch = sampleStream(policy, episodeObserver)
-
-
-
-    val phi = new DenseMatrix[Double](batch.size,
-      featureNumber*actionNumber,
-      batch.flatMap(
-        sample => values.valuesToArray(sample._1.toFeatures, Some(sample._2)).toArray).toArray)
-
-    val rewards = new DenseVector[Double](batch.map(sample => sample._3).toArray)
-
-
+    val batch = trainingData match {
+      case Some(data) => data
+      case None => sampleStream(policy, episodeObserver)
+    }
 
     var iterations = 0
 
     do {
 
       stable = true
+
+      val phi = new DenseMatrix[Double](batch.size,
+        featureNumber*actionNumber,
+        batch.flatMap(
+          sample => values.valuesToArray(sample._1.toFeatures, Some(sample._2)).toArray).toArray)
+
+      val rewards = new DenseVector[Double](batch.map(sample => sample._3).toArray)
+
+      // Build the new sample to do LSQ
 
       val data = batch.flatMap{
         sample =>
@@ -149,19 +143,21 @@ class LSPI(environmentFabric:() => Option[Environment],
 
 
 
+
       // Do the LSQ update
       val changed = values.lsUpdate(phi, pPhi, rewards, gamma)
+      //val changed = values.lsUpdate2(batch, gamma, featureNumber*actionNumber)
 
       if(changed){
         stable = false
       }
 
       // Sample a new batch
-      //batch = sampleStream(policy, episodeObserver)
+      //batch ++= sampleStream(policy, episodeObserver)
       iterations +=1
       println(s"Iteration: $iterations")
 
-    }while(!stable && iterations <= 30)
+    }while(!stable && iterations <= 100)
 
     // Return the tuned policy and the convergence status
     (policy, stable)

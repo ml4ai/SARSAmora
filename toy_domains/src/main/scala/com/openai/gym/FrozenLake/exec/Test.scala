@@ -1,6 +1,7 @@
 package com.openai.gym.FrozenLake.exec
 
 import com.openai.gym.FrozenLake.{FrozenLakeActionsActionValues, FrozenLakeEnvironment}
+import com.openai.gym.observation_spaces.Discrete
 import org.sarsamora.policies.{EpGreedyPolicy, Policy}
 
 import scala.collection.mutable
@@ -21,6 +22,8 @@ object Test extends App {
   // Create a new FrozenLake environment that will run the policy
   val environment = new FrozenLakeEnvironment("4x4", false)
 
+
+
   // Number of trails to execute
   val trails = 100
   // Memory of the observed rewards
@@ -28,6 +31,8 @@ object Test extends App {
 
   // Execute many times the policy
   for(i <- 1 to trails) {
+    val visitedStates = new mutable.HashSet[Discrete]()
+
     println(s"Entering trail $i")
     // Reward of the episode
     var reward = 0.0
@@ -40,13 +45,20 @@ object Test extends App {
     // Execute the policy until it finishes
     while (!environment.done) {
       // Observe the current state of the environment
-      val currentState = environment.observeState
-      // Select the action given the current state and the possible actions
-      val action = policy.selectAction(currentState, environment.possibleActions)
-      // Accumulate the observed reward
-      reward += environment.execute(action)
-      // Draw the board
-      environment.render()
+      val currentState = environment.observeState.asInstanceOf[Discrete]
+      if(true || !visitedStates.contains(currentState)) {
+        visitedStates += currentState
+        // Select the action given the current state and the possible actions
+        val action = policy.selectAction(currentState, environment.possibleActions)
+        // Accumulate the observed reward
+        reward += environment.execute(action)
+        // Draw the board
+        environment.render()
+      }
+      else{
+        println("Loop detected!!")
+        environment.done = true
+      }
     }
 
     //println(s"Reward: $reward")

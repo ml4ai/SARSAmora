@@ -25,6 +25,7 @@ class FrozenLakeEnvironment(val map_name:String, val slippery:Boolean) extends J
   // Initialize the environment
   var currentState:Discrete = Discrete(0, cardinality)
   var done = false
+  var successes = 0
 
   // Call the reset method on the gym environment (Python)
   env.reset()
@@ -74,6 +75,10 @@ class FrozenLakeEnvironment(val map_name:String, val slippery:Boolean) extends J
     val state = returnedData(0).asInstanceOf[Int]
     // Marshall it into our representation
     currentState = Discrete(state, cardinality)
+
+    if(currentState == Discrete(cardinality-1, cardinality))
+      successes += 1
+
     // Parse the observed reward
     val reward = returnedData(1).asInstanceOf[Double]
 

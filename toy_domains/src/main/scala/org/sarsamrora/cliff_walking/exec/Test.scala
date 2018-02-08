@@ -1,8 +1,7 @@
-package com.openai.gym.CliffWalking.exec
+package org.sarsamrora.cliff_walking.exec
 
-import com.openai.gym.CliffWalking._
-import com.openai.gym.observation_spaces._
 import org.sarsamora.policies.{EpGreedyPolicy, Policy}
+import org.sarsamrora.cliff_walking.{CliffWalkingActionsActionValues, CliffWalkingEnvironment, CliffWalkingState}
 
 import scala.collection.mutable
 
@@ -19,24 +18,21 @@ object Test extends App{
 
   // Create a new FrozenLake environment that will run the policy
   val environment = new CliffWalkingEnvironment()
-
   // Memory of the observed rewards
   val cumulativeRewards = new mutable.ArrayBuffer[Double]()
 
   // Reward of the episode
   var reward = 0.0
 
-  // Initialize the environment by calling gym's reset
-  environment.reset()
   // Draw the board
   environment.render()
 
-  val visitedStates = new mutable.HashSet[Discrete]()
+  val visitedStates = new mutable.HashSet[CliffWalkingState]()
 
   // Execute the policy until it finishes
   while (!environment.done) {
     // Observe the current state of the environment
-    val currentState = environment.observeState.asInstanceOf[Discrete]
+    val currentState = environment.observeState.asInstanceOf[CliffWalkingState]
     if(!visitedStates.contains(currentState)) {
       visitedStates += currentState
       // Select the action given the current state and the possible actions
@@ -44,6 +40,7 @@ object Test extends App{
       // Accumulate the observed reward
       reward += environment.execute(action)
       // Draw the board
+      println(s"$action")
       environment.render()
     }
     else{
