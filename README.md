@@ -1,8 +1,12 @@
-# SARSAmora - Reinforcement Learnint library for Scala
+# SARSAmora - Reinforcement Learning library for Scala
 
-I started this library for my own research projects. It contains abstractions to implement RL environments, actions and q-functions.
+SARSAmora is a Scala framework for reinforcement learning.  The
+framework includes abstractions that separate environment interfaces
+(including OpenAI's Gym using JEP and ScalaPy) and several different
+state, action and policy representations from a variety of core
+reinforcement learning algorithms.
 
-Currently, the following learning algorithms are implemented:
+The following learning algorithms are currently implemented:
 
 * SARSA(0)
 * Q-Learning
