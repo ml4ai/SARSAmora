@@ -3,6 +3,7 @@ package org.sarsamora.policy_iteration.td
 import org.sarsamora.actions.Action
 import org.sarsamora.environment._
 import org.sarsamora.policies._
+import org.sarsamora.policy_iteration.EpisodeObserver
 import org.sarsamora.states.State
 import org.sarsamora.value_functions.ActionValues
 
@@ -41,4 +42,8 @@ class SARSA(environmentFabric:() => Option[Environment], episodeBound:Int,
                                           possibleActions: Iterable[Action],
                                           policy: Policy,
                                           actionValues: ActionValues): Action = policy.selectAction(nextState, possibleActions.toSeq)
+
+  override def iteratePolicy(policy: EpGreedyPolicy,
+                             episodeObserver: Option[EpisodeObserver]): (Policy, Boolean) =
+    super.iteratePolicy(policy, episodeObserver, true)
 }

@@ -5,7 +5,7 @@ import org.sarsamora.actions.Action
 import org.sarsamora.environment.Environment
 import org.sarsamora.policies.{EpGreedyPolicy, Policy}
 import org.sarsamora.policy_iteration.td.value_functions.TDUpdate
-import org.sarsamora.policy_iteration.{EpisodeObservation, EpisodeObserver, IterationObservation}
+import org.sarsamora.policy_iteration.{EpisodeObservation, EpisodeObserver, IterationObservation, PolicyIterator}
 import org.sarsamora.states.State
 import org.sarsamora.value_functions.ActionValues
 
@@ -26,12 +26,13 @@ import org.sarsamora.value_functions.ActionValues
 abstract class OnlineTD(environmentFabric:() => Option[Environment],
                         episodeBound:Int, burnInEpisodes:Int,
                         alphas:Iterator[Double],
-                        gamma:Double = 0.8, lambda:Double = 1.0) extends LazyLogging {
+                        gamma:Double = 0.8, lambda:Double = 1.0) extends PolicyIterator(environmentFabric, episodeBound, burnInEpisodes)
+  with LazyLogging {
 
   // Stability flag controlling convergence
-  var stable = true
+  stable = true
   // Control variables
-  var episodeCount = 0
+  episodeCount = 0
 
 
   /**
@@ -54,7 +55,7 @@ abstract class OnlineTD(environmentFabric:() => Option[Environment],
     * @param episodeObserver Optional callback function receiving information each iteration
     * @return Learnt policy and convergence status
     */
-  def iteratePolicy(policy:EpGreedyPolicy, episodeObserver:Option[EpisodeObserver] = None):(Policy, Boolean)= {
+  def iteratePolicy(policy:EpGreedyPolicy, episodeObserver:Option[EpisodeObserver], isSarsa:Boolean):(Policy, Boolean)= {
 
 
     // Fetch the initial environment/episode
@@ -97,8 +98,6 @@ abstract class OnlineTD(environmentFabric:() => Option[Environment],
             // Chose the next action for the TD update
             val nextAction4Update = this.selectNextAction(nextState, environment.possibleActions, policy, policy.values)
 
-
-
             // Perform the update
             val actionValues = policy.values match {
               case v:TDUpdate => v
@@ -114,7 +113,9 @@ abstract class OnlineTD(environmentFabric:() => Option[Environment],
             iterationCounter += 1
 
             // Chose the next action for control
-            val nextAction = policy.selectAction(nextState, environment.possibleActions)
+            val nextAction = if(isSarsa) nextAction4Update else policy.selectAction(nextState, environment.possibleActions)
+
+
 
             // Call the observer for this iteration
             episodeObserver match {

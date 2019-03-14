@@ -2,7 +2,8 @@ package org.sarsamora.policy_iteration.td
 
 import org.sarsamora.actions.Action
 import org.sarsamora.environment.Environment
-import org.sarsamora.policies.Policy
+import org.sarsamora.policies.{EpGreedyPolicy, Policy}
+import org.sarsamora.policy_iteration.EpisodeObserver
 import org.sarsamora.states.State
 import org.sarsamora.value_functions.ActionValues
 
@@ -25,7 +26,7 @@ class QLearning(environmentFabric:() => Option[Environment], episodeBound:Int,
   extends OnlineTD(environmentFabric, episodeBound,
     burnInEpisodes, alphas, gamma, lambda) {
 
-  def this(environmentFabric: () => Option[Environment], episodeBound: Int, burnInEpisodes: Int, alpha: Double, gamma: Double, lambda: Double) {
+  def this(environmentFabric:() => Option[Environment], episodeBound: Int, burnInEpisodes: Int, alpha: Double, gamma: Double, lambda: Double) {
     this(environmentFabric, episodeBound, burnInEpisodes, Stream.continually[Double](alpha).iterator, gamma, lambda)
   }
 
@@ -50,4 +51,15 @@ class QLearning(environmentFabric:() => Option[Environment], episodeBound:Int,
     // Return the top choice
     sortedPairs.head._2
   }
+
+  /**
+    * Policy iteration algorithm
+    *
+    * @param policy          Policy to work with
+    * @param episodeObserver Optional callback function receiving information each iteration
+    * @return Learnt policy and convergence status
+    */
+  override def iteratePolicy(policy: EpGreedyPolicy,
+                             episodeObserver: Option[EpisodeObserver]): (Policy, Boolean) =
+    super.iteratePolicy(policy, episodeObserver, false)
 }
